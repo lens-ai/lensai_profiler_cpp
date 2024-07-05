@@ -11,8 +11,8 @@ on:
     types: [created]
 
 permissions:
-  pages: read|write
-  contents: read|write
+  pages: write
+  contents: write
 
 jobs:
   build:

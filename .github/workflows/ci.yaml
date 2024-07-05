@@ -10,6 +10,10 @@ on:
   release:
     types: [created]
 
+permissions:
+  pages: read|write
+  contents: read|write
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -79,7 +79,7 @@ double calculateSharpnessLaplacian(cv::Mat &img) {
     cv::Scalar mean, sigma;
     cv::meanStdDev(laplacian, mean, sigma);
 
-    double sharpness = sigma.val[0] * sigma.val[0];
+    double sharpness = sigma.val[0];
 
     return sharpness;
 }

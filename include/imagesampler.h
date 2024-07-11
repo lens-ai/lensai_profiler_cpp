@@ -21,7 +21,6 @@
 
 #include "iniparser.h"
 #include "saver.h"
-#include "objectuploader.h"
 #include "generic.h"
 
 // Typedef for distribution box data structure (assuming datasketches::kll_sketch<unit>)
@@ -37,7 +36,7 @@ public:
    * @brief Constructor to initialize ImageSampler object with configuration file path
    * @param configFilePath Path to the configuration file
    */
-  explicit ImageSampler(std::string conf_path, int save_interval);
+  ImageSampler(const std::string& conf_path, int save_interval);
   ~ImageSampler();
 
   /**
@@ -46,7 +45,7 @@ public:
    * @param image OpenCV image matrix
    * @param saveSample Flag indicating whether to save sampled images
    */
-   int sample(std::vector<std::pair<float, int>> &results, cv::Mat &img, bool save_sample);
+   int sample(const std::vector<std::pair<float, int>> &results, cv::Mat &img, bool save_sample);
   
    /**
    * @brief Calculates margin confidence (difference between top two probabilities)
@@ -77,17 +76,37 @@ public:
    * @param probabilityDistribution Vector of class probabilities
    * @return Entropy-based confidence score
    */
-   float entropy_confidence(std::vector<float>& prob_dist);
-   std::string filesSavePath;
+    float entropy_confidence(std::vector<float>& prob_dist);
+    std::string filesSavePath;
 private:   
-  // Member variables for storing confidence metric statistics
-  distributionBox marginConfidenceBox;
-  distributionBox leastConfidenceBox;
-  distributionBox ratioConfidenceBox;
-  distributionBox entropyConfidenceBox;
+    // Member variables for storing confidence metric statistics
+    distributionBox marginConfidenceBox;
+    distributionBox leastConfidenceBox;
+    distributionBox ratioConfidenceBox;
+    distributionBox entropyConfidenceBox;
     Saver *saver;
     //ImageUploader *uploader;
-	std::map<std::string, std::vector<std::string>> samplingConfig;
+    std::map<std::string, std::vector<std::string>> samplingConfig;
+    void registerStatistics(const std::string& name);
+
+    /**
+     * @brief Computes the specified statistic for an image
+     * @param name Statistic name
+     * @param img OpenCV image matrix
+     * @return Computed statistic value
+     */
+    float computeConfidence(const std::string& name, std::vector<float>& confidence);
+
+    /**
+     * @brief Checks if the statistic value exceeds the configured threshold
+     * @param name Statistic name
+     * @param stat_score Computed statistic value
+     * @param config Threshold configuration
+     * @return True if threshold exceeded, otherwise false
+     */
+    bool isThresholdExceeded(const std::string& name, float stat_score, const std::vector<std::string>& config);
+
+    void updateSamplingStatistics(const std::string& name, float confidence_score);
 };
 
 #endif // CONFIDENCE_METRICS_H

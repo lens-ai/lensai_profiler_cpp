@@ -18,43 +18,25 @@ ImageSampler::~ImageSampler() {
    * @param conf_path Path to configuration file
    * @param saver Saver object for saving sampling statistics
    */
-ImageSampler::ImageSampler(std::string conf_path, int save_interval) {
-  try {
-    saver = new Saver(save_interval, "ImageSampler");
+ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
+    : saver(new Saver(save_interval, "ImageSampler")) {
+    try {
+        // Read configuration settings
+        IniParser parser;
+        samplingConfig = parser.parseIniFileNew(conf_path, "sampling", "");
+        filesSavePath = samplingConfig["filepath"][0];
+        createFolderIfNotExists(filesSavePath);
+	samplingConfig.erase("filepath");
 
-    // Read configuration settings
-    IniParser parser; // Assuming filename is correct
-    samplingConfig = parser.parseIniFileNew(conf_path, "sampling", "");
-    filesSavePath = samplingConfig["filepath"][0];
-    samplingConfig.erase("filepath");
-    // Register sampling statistics for saving based on configuration
-    for (const auto& sampling_confidence : samplingConfig) {
-      std::string name = sampling_confidence.first;
-      if (strcmp(name.c_str(), "MARGINCONFIDENCE") == 0) {
-      saver->AddObjectToSave((void*)(&marginConfidenceBox), KLL_TYPE, filesSavePath+"marginconfidence.bin");
-      } else if(strcmp(name.c_str(), "LEASTCONFIDENCE") == 0) {
-      saver->AddObjectToSave((void*)(&leastConfidenceBox), KLL_TYPE, filesSavePath+"leastconfidence.bin");
-      } else if(strcmp(name.c_str(), "RATIOCONFIDENCE") == 0) {
-      // ... Register other sampling statistics similarly
-      saver->AddObjectToSave((void*)(&ratioConfidenceBox), KLL_TYPE, filesSavePath+"ratioconfidence.bin");
-      } else if(strcmp(name.c_str(), "ENTROPYCONFIDENCE") == 0) {
-      saver->AddObjectToSave((void*)(&entropyConfidenceBox), KLL_TYPE, filesSavePath+"entropyconfidence.bin");
-      }
+        // Register sampling statistics for saving based on configuration
+        for (const auto& sampleMetric : samplingConfig) {
+            registerStatistics(sampleMetric.first);
+        }
+
+        saver->StartSaving();
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
     }
-    saver->StartSaving();
-    /*std::string endpointUrl="";
-    std::string token="";
-    saver->StartSaving();
-    s3_client_config_t s3_client_config;
-    std::string bucketName;
-    std::string objectKey;
-    std::chrono::milliseconds interval;
-    int uploadtype=1;
-    uploader = new ImageUploader(uploadtype, endpointUrl, token, s3_client_config);
-    uploader->startUploadThread(filesSavePath, bucketName, objectKey, interval);*/
-  } catch (const std::runtime_error& e) {
-    std::cerr << e.what() << std::endl;
-  }
 }
 
   /**
@@ -66,61 +48,37 @@ ImageSampler::ImageSampler(std::string conf_path, int save_interval) {
    * @return 1 on success, error code on failure
    */
 
-int ImageSampler::sample(std::vector<std::pair<float, int>> &results, cv::Mat &img, bool save_sample = true) {
-	std::vector<float> confidence; // Extract confidence scores
+int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::Mat& img, bool save_sample) {
+    std::vector<float> confidence; // Extract confidence scores
+    for (const auto& pair : results) {
+        confidence.push_back(pair.first);
+    }
 
-	// Extract confidence scores from results
-	for (const auto& pair : results) {
-		confidence.push_back(pair.first);
-	}
-	float thresh_lower = 0;
-	float thresh_upper = 0;
-	// Apply configured sampling criteria to identify uncertain samples
-	for (const auto& sampling_confidence : samplingConfig) {
-		std::string name = sampling_confidence.first;
-		std::string baseName = name;
-		try {
-        		thresh_lower = std::stof(sampling_confidence.second[0]);  // Attempt to convert the string to float
-        		thresh_upper = std::stof(sampling_confidence.second[1]);
-    		} catch (const std::invalid_argument& e) {
-        		std::cerr << "Error: Invalid argument - " << e.what() << std::endl;
-   		} catch (const std::out_of_range& e) {
-        		std::cerr << "Error: Out of range - " << e.what() << std::endl;
-    		}
-		float confidence_score = -1.0f;
+    // Apply configured sampling criteria to identify uncertain samples
+    for (const auto& sampleMetric : samplingConfig) {
+        try {
+            float thresh_lower = std::stof(sampleMetric.second[0]);
+            float thresh_upper = std::stof(sampleMetric.second[1]);
+	    std::string metric = sampleMetric.first;
+            float confidence_score = computeConfidence(metric, confidence);
 
-		if (strcmp(name.c_str(), "MARGINCONFIDENCE") == 0) {
-			// Compute margin confidence and update statistics
-			confidence_score = margin_confidence(confidence, false);
-			marginConfidenceBox.update(confidence_score);
-			if (confidence_score > thresh_lower && confidence_score < thresh_upper) {
-				std::string savedImagePath = saveImageWithTimestamp(img, filesSavePath, baseName);
-			}
-		} else if (strcmp(name.c_str(), "LEASTCONFIDENCE") == 0) {
-			confidence_score = least_confidence(confidence, false);
-			leastConfidenceBox.update(confidence_score);
-			if (confidence_score > thresh_lower && confidence_score < thresh_upper){
-				std::string savedImagePath = saveImageWithTimestamp(img, filesSavePath, baseName);
-			}
-		} else if (strcmp(name.c_str(), "RATIOCONFIDENCE") == 0) {
-			confidence_score = ratio_confidence(confidence, false);
-			ratioConfidenceBox.update(confidence_score);
-			if (confidence_score > thresh_lower && confidence_score < thresh_upper){
-				std::string imagePath = filesSavePath;
-				std::string savedImagePath = saveImageWithTimestamp(img, filesSavePath, baseName);
-			}
-		} else if (strcmp(name.c_str(), "ENTROPYCONFIDENCE") == 0) {
-			confidence_score = entropy_confidence(confidence);
-			entropyConfidenceBox.update(confidence_score);
-			if (confidence_score > thresh_lower && confidence_score < thresh_upper){
-				std::string imagePath = filesSavePath;
-				std::string savedImagePath = saveImageWithTimestamp(img, filesSavePath, baseName);
-			}
-		}
-	}
-	if (save_sample == false)
-		saver->StopSaving();
-	return 1; // Indicate success
+            updateSamplingStatistics(metric, confidence_score);
+
+            if (confidence_score < thresh_lower || confidence_score > thresh_upper) {
+                saveImageWithTimestamp(img, filesSavePath, metric);
+            }
+        } catch (const std::invalid_argument& e) {
+            std::cerr << "Error: Invalid argument - " << e.what() << std::endl;
+        } catch (const std::out_of_range& e) {
+            std::cerr << "Error: Out of range - " << e.what() << std::endl;
+        }
+    }
+
+    if (!save_sample) {
+        saver->StopSaving();
+    }
+
+    return 1; // Indicate success
 }
 
 
@@ -196,3 +154,57 @@ int ImageSampler::sample(std::vector<std::pair<float, int>> &results, cv::Mat &i
     float normalized_entropy = raw_entropy / std::log2(static_cast<float>(num_labels));
     return normalized_entropy;
     }
+
+/**
+ * @brief Registers sampling statistics for saving based on configuration
+ * @param name Sampling confidence name
+ */
+void ImageSampler::registerStatistics(const std::string& name) {
+    if (name == "MARGINCONFIDENCE") {
+        saver->AddObjectToSave((void*)(&marginConfidenceBox), KLL_TYPE, filesSavePath + "marginconfidence.bin");
+    } else if (name == "LEASTCONFIDENCE") {
+        saver->AddObjectToSave((void*)(&leastConfidenceBox), KLL_TYPE, filesSavePath + "leastconfidence.bin");
+    } else if (name == "RATIOCONFIDENCE") {
+        saver->AddObjectToSave((void*)(&ratioConfidenceBox), KLL_TYPE, filesSavePath + "ratioconfidence.bin");
+    } else if (name == "ENTROPYCONFIDENCE") {
+        saver->AddObjectToSave((void*)(&entropyConfidenceBox), KLL_TYPE, filesSavePath + "entropyconfidence.bin");
+    }
+}
+
+
+/**
+ * @brief Computes confidence score based on the sampling method
+ * @param name Sampling confidence name
+ * @param confidence Vector of class probabilities
+ * @return Computed confidence score
+ */
+float ImageSampler::computeConfidence(const std::string& name, std::vector<float>& confidence) {
+    if (name == "MARGINCONFIDENCE") {
+        return margin_confidence(confidence, false);
+    } else if (name == "LEASTCONFIDENCE") {
+        return least_confidence(confidence, false);
+    } else if (name == "RATIOCONFIDENCE") {
+        return ratio_confidence(confidence, false);
+    } else if (name == "ENTROPYCONFIDENCE") {
+        return entropy_confidence(confidence);
+    }
+    return -1.0f;
+}
+
+
+/**
+ * @brief Updates sampling statistics based on the confidence score
+ * @param name Sampling confidence name
+ * @param confidence_score Computed confidence score
+ */
+void ImageSampler::updateSamplingStatistics(const std::string& name, float confidence_score) {
+    if (name == "MARGINCONFIDENCE") {
+        marginConfidenceBox.update(confidence_score);
+    } else if (name == "LEASTCONFIDENCE") {
+        leastConfidenceBox.update(confidence_score);
+    } else if (name == "RATIOCONFIDENCE") {
+        ratioConfidenceBox.update(confidence_score);
+    } else if (name == "ENTROPYCONFIDENCE") {
+        entropyConfidenceBox.update(confidence_score);
+    }
+}

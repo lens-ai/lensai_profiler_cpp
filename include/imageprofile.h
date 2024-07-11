@@ -13,7 +13,11 @@
 #include "saver.h"
 #include "generic.h"
 #include <kll_sketch.hpp>
-#include "objectuploader.h"
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <functional>
+
 
 // Typedef for distribution box data structure (assuming datasketches::kll_sketch<float>)
 typedef datasketches::kll_sketch<float> distributionBox;
@@ -24,22 +28,31 @@ typedef datasketches::kll_sketch<float> distributionBox;
  *
  * This class provides functionalities for analyzing image properties like distribution of pixel values, contrast, brightness, etc. It utilizes KLL sketches for memory-efficient storage of these statistics.
  */
+
 class ImageProfile {
 public:
-
-	int channel;
-
-  /**
+    /**
+     * @brief Destructor to clean up resources
+     */
+    ~ImageProfile();
+    
+/**
    * @brief Constructs an ImageProfile object with the specified image characteristics.
    *
    * @param channels The number of channels in the image (e.g., grayscale: 1, RGB: 3).
    * @param img_type The image type (implementation specific).
    * @param metrics The set of image metrics to be tracked (e.g., "contrast", "brightness").
    */
-  ImageProfile(std::string conf_path, int save_interval, int channels);
-  ~ImageProfile();
 
-  /**
+    /**
+     * @brief Constructor to initialize ImageProfile object
+     * @param conf_path Path to configuration file
+     * @param save_interval Interval for saving statistics
+     * @param channels Number of image channels (default: 1)
+     */
+    ImageProfile(const std::string& conf_path, int save_interval, int channels = 1);
+
+   /**
    * @brief Logs image statistics for the provided image data.
    *
    * This function analyzes the provided image data and updates the internal KLL sketches with relevant statistics.
@@ -51,22 +64,22 @@ public:
    * @param imgprofile_map A map to store various image profile metrics (e.g., "contrast").
    */
 
-  int profile(cv::Mat &img, bool save_sample);
-
-  std::vector<std::pair<std::string, double>> samplingConfidences;
-
-  void iterateImage(const cv::Mat& img, const std::function<void(const std::vector<int>&)>& callback);
-
-  void updatePixelValues(const std::vector<int>& pixelValues);
+    /**
+     * @brief Computes and logs selected image statistics
+     * @param img OpenCV image matrix
+     * @param save_sample Flag indicating whether to save samples exceeding thresholds
+     * @return 1 on success, error code on failure
+     */
+    int profile(cv::Mat& img, bool save_sample = false);
 
 #ifndef TEST
 private:
 #endif
-
-    Saver *saver;
-    //ImageUploader *uploader;
-
-  /**
+    Saver* saver;
+    std::string filesSavePath;
+    std::map<std::string, std::vector<std::string>> imageConfig;
+    int channels;
+   /**
    * @brief KLL sketch for storing contrast distribution.
    */
   distributionBox contrastBox;
@@ -82,19 +95,48 @@ private:
    * @brief KLL sketch for storing mean pixel value distribution.
    */
   std::vector<distributionBox *> meanBox;
-  distributionBox entropyBox;
 
   /**
    * @brief KLL sketch for storing noise distribution.
    */
   distributionBox noiseBox;
 
-  // Per-channel KLL sketches (assuming pixelBox_r, etc. are for individual channels)
-  /**
-   * @brief KLL sketch for storing overall pixel value distribution.
-   */
-	std::string filesSavePath;
-	std::map<std::string, std::vector<std::string>> imageConfig;
+
+    /**
+     * @brief Registers statistics for saving based on configuration
+     * @param name Statistic name
+     */
+    void registerStatistics(const std::string& name);
+
+    /**
+     * @brief Computes the specified statistic for an image
+     * @param name Statistic name
+     * @param img OpenCV image matrix
+     * @return Computed statistic value
+     */
+    float computeStatistic(const std::string& name, cv::Mat& img);
+
+    /**
+     * @brief Checks if the statistic value exceeds the configured threshold
+     * @param name Statistic name
+     * @param stat_score Computed statistic value
+     * @param config Threshold configuration
+     * @return True if threshold exceeded, otherwise false
+     */
+    bool isThresholdExceeded(const std::string& name, float stat_score, const std::vector<std::string>& config);
+
+    /**
+     * @brief Iterates over an image and applies a callback for each pixel's values
+     * @param img OpenCV image matrix
+     * @param callback Function to call with each pixel's values
+     */
+    void iterateImage(const cv::Mat& img, const std::function<void(const std::vector<int>&)>& callback);
+
+    /**
+     * @brief Updates the pixel values for histogram calculation
+     * @param pixelValues Vector of pixel values
+     */
+    void updatePixelValues(const std::vector<int>& pixelValues);
 };
 
-#endif
+#endif // IMAGEPROFILE_H

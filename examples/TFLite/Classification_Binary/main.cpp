@@ -176,7 +176,7 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     end = std::chrono::high_resolution_clock::now();
     auto execution_time_imageprofile = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for image profile: " << execution_time_imageprofile <<std::endl; 
-
+    
     std::cout << "profiling model profile" << std::endl;
     start = std::chrono::high_resolution_clock::now();
     model_profile.log_classification_model_stats(10.0, top_results);

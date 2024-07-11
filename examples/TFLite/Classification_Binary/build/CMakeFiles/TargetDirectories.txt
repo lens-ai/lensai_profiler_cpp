@@ -1,3 +1,0 @@
-/Users/venkatapydialli/Projects/Edgetpu/lensai_profiler_cpp/examples/TFLite/Classification_Binary/build/CMakeFiles/TFLiteCheck.dir
-/Users/venkatapydialli/Projects/Edgetpu/lensai_profiler_cpp/examples/TFLite/Classification_Binary/build/CMakeFiles/edit_cache.dir
-/Users/venkatapydialli/Projects/Edgetpu/lensai_profiler_cpp/examples/TFLite/Classification_Binary/build/CMakeFiles/rebuild_cache.dir

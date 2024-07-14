@@ -44,6 +44,12 @@ endif()
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+find_package(ZLIB REQUIRED)
+find_library(TAR_LIB tar REQUIRED)
+	
+if(NOT TAR_LIB)
+    message(FATAL_ERROR "libtar not found")
+endif()
 # Try to find OpenCV
 if(APPLE)
 set(OpenCV_DIR "/Users/venkatapydialli/Projects/Edgetpu/install/lib/cmake/opencv4")
@@ -61,6 +67,7 @@ INCLUDE_DIRECTORIES(/usr/local/libs/)
 # Include Directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/datasketches)
+include_directories(${ZLIB_INCLUDE_DIRS})
 
 add_library(imagesampler SHARED
             src/helpers/saver.cpp
@@ -85,6 +92,10 @@ add_library(modelprofiler SHARED
             src/profiles/modelprofile.cpp
             )	    
 
+add_library(lensaipublisher SHARED
+            src/helpers/tar_gz_creator.cpp
+            )
+	    
 if(APPLE)
 message(STATUS "skipping TEST for MAC")
 else()
@@ -173,6 +184,7 @@ endif()
 target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library
 install(TARGETS ${CMAKE_PROJECT_NAME}

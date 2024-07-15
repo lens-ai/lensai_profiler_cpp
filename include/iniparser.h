@@ -19,8 +19,7 @@ public:
      * @param subsection The name of the subsection in the INI file.
      * @return A map containing the key-value pairs.
      */
-    static std::map<std::string, std::string> parseIniFile(const std::string& filename, const std::string& section, const std::string& key);
-    std::map<std::string, std::vector<std::string>> parseIniFileNew(const std::string& filename, const std::string& section, const std::string& key);
+    static std::map<std::string, std::vector<std::string>> parseIniFile(const std::string& filename, const std::string& section, const std::string& key);
 };
 
 #endif // INIPARSER_H

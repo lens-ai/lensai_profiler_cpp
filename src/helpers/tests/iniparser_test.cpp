@@ -19,10 +19,10 @@ protected:
         // Creating a basic test INI file with sections and subsections
         std::string iniContent = R"(
 [sampling]
-marginconfidence = 0.5
-least = 0.4
+marginconfidence = 0.5, 0.9
+least = 0.4, 0.7
 [imagemetrics]
-noise = 0.5
+noise = 0.5, 0.8
 )";
 
         createTestIniFile(testIniFilename, iniContent);
@@ -39,7 +39,8 @@ TEST_F(IniParserTest, ParseSpecificKey) {
     auto result = parser.parseIniFile(testIniFilename, "sampling", "marginconfidence");
 
     ASSERT_EQ(result.size(), 1);
-    ASSERT_EQ(result["marginconfidence"], "0.5");
+    ASSERT_EQ(result["marginconfidence"][0], "0.5");
+    ASSERT_EQ(result["marginconfidence"][1], "0.9");
 }
 
 TEST_F(IniParserTest, ParseAllKeysInSection) {
@@ -47,8 +48,10 @@ TEST_F(IniParserTest, ParseAllKeysInSection) {
     auto result = parser.parseIniFile(testIniFilename, "sampling", "");
 
     ASSERT_EQ(result.size(), 2);
-    ASSERT_EQ(result["marginconfidence"], "0.5");
-    ASSERT_EQ(result["least"], "0.4");
+    ASSERT_EQ(result["marginconfidence"][0], "0.5");
+    ASSERT_EQ(result["marginconfidence"][1], "0.9");
+    ASSERT_EQ(result["least"][0], "0.4");
+    ASSERT_EQ(result["least"][1], "0.7");
 }
 
 TEST_F(IniParserTest, ParseInvalidKey) {
@@ -67,7 +70,7 @@ TEST_F(IniParserTest, ParseInvalidSection) {
 
 TEST_F(IniParserTest, ParseEmptyIniFile) {
     createTestIniFile(testIniFilename, ""); // Overwriting with an empty content
-    std::map<std::string, std::string> result = IniParser::parseIniFile(testIniFilename, "anysection", "");
+    std::map<std::string, std::vecotr<std::string>> result = IniParser::parseIniFile(testIniFilename, "anysection", "");
     EXPECT_TRUE(result.empty()); // The result should be empty
 }
 

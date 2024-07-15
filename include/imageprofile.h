@@ -76,7 +76,8 @@ public:
 private:
 #endif
     Saver* saver;
-    std::string filesSavePath;
+    std::string statSavepath;
+    std::string dataSavepath;
     std::map<std::string, std::vector<std::string>> imageConfig;
     int channels;
    /**

@@ -19,7 +19,7 @@ namespace fs = std::__fs::filesystem;  // Namespace alias for readability
  *
  * @return bool True if the folder is created or already exists, false on error.
  */
-bool createFolderIfNotExists(const std::string& path);
+bool createFolderIfNotExists(const std::string& statSavepath, const std::string& dataSavepath);
 
 #endif // GENERIC_H
 

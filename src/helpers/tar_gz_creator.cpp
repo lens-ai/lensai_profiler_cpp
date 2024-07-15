@@ -4,9 +4,9 @@
 #include <tar.h>
 #include <zlib.h>
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
-namespace fs = std::__fs::filesystem;  // Namespace alias for readability
+namespace fs = std::filesystem;
 
 TarGzCreator::TarGzCreator() {}
 
@@ -15,9 +15,9 @@ std::vector<std::string> TarGzCreator::collectFilesFromFolders(const std::vector
 
     for (const auto& folder : folders) {
         if (fs::exists(folder) && fs::is_directory(folder)) {
-            for (fs::recursive_directory_iterator it(folder), end; it != end; ++it) {
-                if (fs::is_regular_file(it->path())) {
-                    collectedFiles.push_back(it->path().string());
+            for (const auto& entry : fs::recursive_directory_iterator(folder)) {
+                if (fs::is_regular_file(entry.path())) {
+                    collectedFiles.push_back(entry.path().string());
                 }
             }
         } else {
@@ -178,3 +178,4 @@ bool TarGzCreator::unpackTar(const std::string& tarFilePath, const std::string& 
 
     return true;
 }
+

@@ -2,12 +2,14 @@
 #define HTTP_UPLOADER_H
 
 #include <string>
-#include <curl/curl.h>
+#include <ctime>
 
 class HttpUploader {
 public:
     HttpUploader(const std::string& endpointUrl, const std::string& token);
-    bool postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp);
+
+    // Function to upload a file with sensor ID, timestamp, and file type
+    bool postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType);
 
 private:
     std::string endpointUrl_;

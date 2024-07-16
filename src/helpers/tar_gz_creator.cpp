@@ -179,3 +179,19 @@ bool TarGzCreator::unpackTar(const std::string& tarFilePath, const std::string& 
     return true;
 }
 
+bool TarGzCreator::emptyFolder(const std::string& folderPath) {
+    std::lock_guard<std::mutex> lock(folderMutex); // Lock the folder access
+
+    try {
+        for (const auto& entry : fs::directory_iterator(folderPath)) {
+            if (fs::is_regular_file(entry.path())) {
+                fs::remove(entry.path());
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error emptying folder: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}

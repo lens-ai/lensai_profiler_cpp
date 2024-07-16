@@ -3,10 +3,58 @@
 #include <vector>
 #include <ctime>
 #include <curl/curl.h>
-#include <filesystem> // For file deletion
+#include <filesystem>
+#include <iostream>
+
+namespace fs = std::filesystem;
 
 HttpUploader::HttpUploader(const std::string& endpointUrl, const std::string& token)
     : endpointUrl_(endpointUrl), token_(token) {}
+
+bool HttpUploader::uploadFolder(const std::string& folderPath, const std::string& sensorId, time_t timestamp, const std::string& fileType, bool deletedata) {
+    TarGzCreator tarGzCreator;
+
+    // Step 1: Create tar file
+    std::vector<std::string> folders = { folderPath };
+    std::vector<std::string> files = tarGzCreator.collectFilesFromFolders(folders);
+    std::string tarFilePath = "archive.tar";
+    std::string gzFilePath = "archive.tar.gz";
+
+    if (!tarGzCreator.createTar(tarFilePath, files)) {
+        std::cerr << "Failed to create tar file." << std::endl;
+        return false;
+    }
+
+    // Step 2: Compress to tar.gz
+    if (!tarGzCreator.compressToGz(tarFilePath, gzFilePath)) {
+        std::cerr << "Failed to compress tar file to gz." << std::endl;
+        return false;
+    }
+
+    // Step 3: Empty the folder
+    if (!tarGzCreator.emptyFolder(folderPath) && deletedata) {
+        std::cerr << "Failed to empty the folder." << std::endl;
+        return false;
+    }
+
+    // Step 4: Upload the file
+    if (!postFile(gzFilePath, sensorId, timestamp, fileType)) {
+        std::cerr << "Failed to upload gz file." << std::endl;
+        return false;
+    }
+
+    // Step 5: Delete the gz file
+    if (fs::exists(gzFilePath)) {
+        fs::remove(gzFilePath);
+    }
+
+    // Step 6: Delete the tar file
+    if (fs::exists(tarFilePath)) {
+        fs::remove(tarFilePath);
+    }
+
+    return true;
+}
 
 bool HttpUploader::postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType) {
     CURL* curl = curl_easy_init();
@@ -69,18 +117,5 @@ bool HttpUploader::postFile(const std::string& filePath, const std::string& sens
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
 
-    if (res == CURLE_OK) {
-        try {
-            std::filesystem::remove(filePath);
-            std::cout << "Successfully deleted file: " << filePath << std::endl;
-        } catch (const std::filesystem::filesystem_error& e) {
-            std::cerr << "Error deleting file: " << e.what() << std::endl;
-            return false;
-        }
-        return true;
-    } else {
-        std::cerr << "HTTP POST request failed: " << curl_easy_strerror(res) << std::endl;
-        return false;
-    }
+    return res == CURLE_OK;
 }
-

@@ -94,6 +94,7 @@ add_library(modelprofiler SHARED
 
 add_library(lensaipublisher SHARED
             src/helpers/tar_gz_creator.cpp
+	    src/helpers/http_uploader.cpp
             )
 	    
 if(APPLE)

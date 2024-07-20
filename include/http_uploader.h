@@ -5,16 +5,35 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <thread>
+
+typedef struct {
+    std::string endpointUrl;
+    std::string token;
+    std::string folderPath;
+    std::string sensorId;
+    std::string fileType;
+    bool deletedata;
+    int interval;
+}http_uploader_data_t;
 
 class HttpUploader {
 public:
-    HttpUploader(const std::string& endpointUrl, const std::string& token);
-    bool uploadFolder(const std::string& folderPath, const std::string& sensorId, time_t timestamp, const std::string& fileType, bool deletedat = false);
+    HttpUploader(http_uploader_data_t &http_uploader_data);
 
+    void StartUpload();
+    void StopUpload();
+    void UploadLoop();
 private:
-    std::string endpointUrl_;
-    std::string token_;
+    http_uploader_data_t http_uploader_data_;
+
+    std::thread upload_thread_;        // Thread object for upload
+    std::mutex upload_mutex_;         // Mutex for queue access
+
+    std::atomic<bool> exitUploadLoop;
+
     bool postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType);
+    bool uploadFolder();
 };
 
 #endif // HTTP_UPLOADER_H

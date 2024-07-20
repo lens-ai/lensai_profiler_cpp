@@ -2,6 +2,7 @@
 #include "iniparser.h" // Assuming this is the header where the parseIniFile method is defined
 #include <map>
 #include <fstream>
+#include <vector>
 
 
 // A utility function to create a temporary INI file for testing
@@ -70,7 +71,7 @@ TEST_F(IniParserTest, ParseInvalidSection) {
 
 TEST_F(IniParserTest, ParseEmptyIniFile) {
     createTestIniFile(testIniFilename, ""); // Overwriting with an empty content
-    std::map<std::string, std::vecotr<std::string>> result = IniParser::parseIniFile(testIniFilename, "anysection", "");
+    std::map<std::string, std::vector<std::string>> result = IniParser::parseIniFile(testIniFilename, "anysection", "");
     EXPECT_TRUE(result.empty()); // The result should be empty
 }
 

@@ -6,7 +6,7 @@
 // Forward declaration for potential future class usage (optional)
 // class FileSystemHelper;
 
-namespace fs = std::__fs::filesystem;  // Namespace alias for readability
+namespace fs = std::filesystem;  // Namespace alias for readability
 
 /**
  * @brief Checks if a path exists and creates a folder if it doesn't exist.

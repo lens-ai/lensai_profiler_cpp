@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <vector>
 
 /**
  * @brief Class for parsing INI files and extracting key-value pairs.

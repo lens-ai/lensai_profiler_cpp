@@ -8,14 +8,57 @@
 
 namespace fs = std::filesystem;
 
-HttpUploader::HttpUploader(const std::string& endpointUrl, const std::string& token)
-    : endpointUrl_(endpointUrl), token_(token) {}
+HttpUploader::HttpUploader(http_uploader_data_t &http_uploader_data)
+    : http_uploader_data_(http_uploader_data) {
+}
 
-bool HttpUploader::uploadFolder(const std::string& folderPath, const std::string& sensorId, time_t timestamp, const std::string& fileType, bool deletedata) {
+void HttpUploader::StartUpload() {
+    upload_thread_ = std::thread(&HttpUploader::UploadLoop, this);
+}
+
+void HttpUploader::UploadLoop() {
+    while (true) {
+        do {
+
+            if (exitUploadLoop.load()) {
+              pthread_exit(nullptr);// Thread termination condition
+            }
+
+            std::unique_lock<std::mutex> lock(upload_mutex_);
+
+            if (exitUploadLoop.load()) {
+                pthread_exit(nullptr);// Thread termination condition
+            }
+
+            uploadFolder();
+
+        }while(0); //scope of queue_mutex_
+
+        for (int i = 0; i < http_uploader_data_.interval; i++) {
+            if (exitUploadLoop.load()) {
+                pthread_exit(nullptr);// Thread termination condition
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+}
+
+void HttpUploader::StopUpload(void) {
+    if (upload_thread_.joinable()) {
+        exitUploadLoop.store(true);
+        upload_thread_.join();
+    }
+}
+
+bool HttpUploader::uploadFolder() {
+    // Get current time as time_point
+    auto now = std::chrono::system_clock::now();
+    // Convert to time_t
+    std::time_t timestamp = std::chrono::system_clock::to_time_t(now);
     TarGzCreator tarGzCreator;
 
     // Step 1: Create tar file
-    std::vector<std::string> folders = { folderPath };
+    std::vector<std::string> folders = { http_uploader_data_.folderPath };
     std::vector<std::string> files = tarGzCreator.collectFilesFromFolders(folders);
     std::string tarFilePath = "archive.tar";
     std::string gzFilePath = "archive.tar.gz";
@@ -32,13 +75,13 @@ bool HttpUploader::uploadFolder(const std::string& folderPath, const std::string
     }
 
     // Step 3: Empty the folder
-    if (!tarGzCreator.emptyFolder(folderPath) && deletedata) {
+    if (!tarGzCreator.emptyFolder(http_uploader_data_.folderPath) && http_uploader_data_.deletedata) {
         std::cerr << "Failed to empty the folder." << std::endl;
         return false;
     }
 
     // Step 4: Upload the file
-    if (!postFile(gzFilePath, sensorId, timestamp, fileType)) {
+    if (!postFile(gzFilePath, http_uploader_data_.sensorId, timestamp, http_uploader_data_.fileType)) {
         std::cerr << "Failed to upload gz file." << std::endl;
         return false;
     }
@@ -75,11 +118,11 @@ bool HttpUploader::postFile(const std::string& filePath, const std::string& sens
     std::vector<char> fileBuffer(fileSize);
     file.read(fileBuffer.data(), fileSize);
 
-    curl_easy_setopt(curl, CURLOPT_URL, endpointUrl_.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, http_uploader_data_.endpointUrl.c_str());
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
 
     struct curl_slist* headers = nullptr;
-    headers = curl_slist_append(headers, ("Authorization: Bearer " + token_).c_str());
+    headers = curl_slist_append(headers, ("Authorization: Bearer " + http_uploader_data_.token).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     struct curl_httppost* formpost = nullptr;
@@ -119,3 +162,4 @@ bool HttpUploader::postFile(const std::string& filePath, const std::string& sens
 
     return res == CURLE_OK;
 }
+

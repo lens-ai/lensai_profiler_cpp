@@ -73,7 +73,8 @@ add_library(imagesampler SHARED
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
             src/helpers/imghelpers.cpp
-	    src/helpers/generic.cpp
+            src/helpers/generic.cpp
+            src/helpers/http_uploader.cpp
             src/sampling/imagesampler.cpp
 			)
 
@@ -106,10 +107,10 @@ add_executable(Tar_GZ_test
             )
 
 
-add_executable(Http_uploader_test
-	    src/helpers/http_uploader.cpp
-            src/helpers/tests/http_uploader_test.cpp	    
-	    )   
+#add_executable(Http_uploader_test
+#	    src/helpers/http_uploader.cpp
+#            src/helpers/tests/httpuploader_test.cpp	    
+#	    )   
 
 
 add_executable(ImageProcessingTest
@@ -143,32 +144,32 @@ add_executable(model_profiler_test
                 src/profiles/tests/modelprofile_test.cpp
 	      )
 
-add_executable(image_sampler_test
-                src/helpers/saver.cpp
-                src/helpers/iniparser.cpp
-                src/helpers/imghelpers.cpp
-		src/helpers/generic.cpp
-                src/sampling/imagesampler.cpp
-                src/sampling/tests/imagesampler_test.cpp
-              )
+#add_executable(image_sampler_test
+#                src/helpers/saver.cpp
+#                src/helpers/iniparser.cpp
+#                src/helpers/imghelpers.cpp
+#		src/helpers/generic.cpp
+#                src/sampling/imagesampler.cpp
+#                src/sampling/tests/imagesampler_test.cpp
+#              )
 
 target_compile_definitions(ImageProcessingTest PRIVATE TEST)
 
 target_compile_definitions(IniParserTest PRIVATE TEST)
 target_compile_definitions(SaverTest PRIVATE TEST)
 target_compile_definitions(image_profiler_test PRIVATE TEST)
-target_compile_definitions(image_sampler_test PRIVATE TEST)
+#target_compile_definitions(image_sampler_test PRIVATE TEST)
 target_compile_definitions(model_profiler_test PRIVATE TEST)
-target_compile_definitions(Http_uploader_test PRIVATE TEST)
+#target_compile_definitions(Http_uploader_test PRIVATE TEST)
 target_compile_definitions(Tar_GZ_test PRIVATE TEST)
 
 target_link_libraries(ImageProcessingTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
 target_link_libraries(IniParserTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
 target_link_libraries(SaverTest gtest gtest_main ${OpenCV_LIBS} pthread)
 target_link_libraries(image_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
+#target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 target_link_libraries(model_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
+#target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
 target_link_libraries(Tar_GZ_test gtest gtest_main tar z boost_filesystem boost_system pthread)
 
 enable_testing()

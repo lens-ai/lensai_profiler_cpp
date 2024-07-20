@@ -5,6 +5,11 @@
 #include <kll_sketch.hpp>
 #include <frequent_items_sketch.hpp>
 
+#include <filesystem>
+#include <fstream>
+
+namespace fs = std::filesystem;
+
 typedef datasketches::kll_sketch<float> distributionBox;
 typedef datasketches::frequent_items_sketch<std::string> frequent_class_sketch;
 Saver::~Saver(){
@@ -30,6 +35,7 @@ void Saver::AddObjectToSave(void *object, int type, const std::string& filename)
   tmp_obj->obj = object;
   tmp_obj->type = type;
   tmp_obj->filename = filename;
+  tmp_obj->max_size = 1024; //size in KB
   objects_to_save_.push(tmp_obj);
   cv_.notify_one(); // Notify the waiting thread about a new object
   log_info << parent_name << ": added " << filename << " into saver" << std::endl;
@@ -86,8 +92,26 @@ void Saver::SaveLoop() {
   }
 }
 
+static uintmax_t calculateDirectorySize(const fs::path& dir) {
+    uintmax_t size = 0;
+    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        if (fs::is_regular_file(entry)) {
+            size += fs::file_size(entry);
+        }
+    }
+    return size;
+}
+
 void Saver::SaveObjectToFile(data_object_t *object) {
     std::ofstream os(object->filename.c_str());
+
+    fs::path filePath(object->filename);
+    fs::path baseDir = filePath.parent_path();
+    uintmax_t dirSize = calculateDirectorySize(baseDir);
+
+    if (dirSize >= (object->max_size * 1024))
+        return;
+
     try {
     switch(object->type) {
         case KLL_TYPE:{

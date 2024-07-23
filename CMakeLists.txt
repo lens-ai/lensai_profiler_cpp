@@ -76,6 +76,7 @@ add_library(imagesampler SHARED
             src/helpers/generic.cpp
             src/helpers/http_uploader.cpp
             src/sampling/imagesampler.cpp
+            src/helpers/tar_gz_creator.cpp
 			)
 
 add_library(imageprofiler SHARED
@@ -91,12 +92,12 @@ add_library(modelprofiler SHARED
             src/helpers/iniparser.cpp
 	    src/helpers/generic.cpp
             src/profiles/modelprofile.cpp
-            )	    
-
-add_library(lensaipublisher SHARED
-            src/helpers/tar_gz_creator.cpp
-	    src/helpers/http_uploader.cpp
-            )
+            )	
+    
+#add_library(lensaipublisher SHARED
+#            src/helpers/tar_gz_creator.cpp
+#	    src/helpers/http_uploader.cpp
+#            )
 	    
 if(APPLE)
 message(STATUS "skipping TEST for MAC")
@@ -183,10 +184,10 @@ add_test(NAME model_profiler_test COMMAND model_profiler_test)
 #add_test(NAME  COMMAND )
 endif()
 
-target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
-target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
-target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
-target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+#target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library
 install(TARGETS ${CMAKE_PROJECT_NAME}

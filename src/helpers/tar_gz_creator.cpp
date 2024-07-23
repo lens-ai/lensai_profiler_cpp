@@ -1,8 +1,6 @@
 #include "tar_gz_creator.h"
 #include <fstream>
 #include <vector>
-#include <tar.h>
-#include <zlib.h>
 #include <iostream>
 #include <filesystem>
 

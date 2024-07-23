@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <string>
-#include <boost/filesystem.hpp>
-#include <libtar.h>  // Header for libtar
+#include <libtar.h>
+#include <tar.h>  // Header for libtar
 #include <zlib.h>
+#include <filesystem>
 
 class TarGzCreator {
 public:

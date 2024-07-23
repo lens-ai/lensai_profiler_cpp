@@ -95,7 +95,7 @@ if(APPLE)
 else()
     target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR}/../tflite_v2/)
 endif()
-    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler tar curl pthread)
+    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler tar curl pthread stdc++fs)
 
 if(WIN32)
     add_custom_command(

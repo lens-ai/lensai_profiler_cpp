@@ -28,6 +28,10 @@ INCLUDE_DIRECTORIES(${SOURCE_DIR}/include/datasketches)
 INCLUDE_DIRECTORIES(${SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${SOURCE_DIR}/build)
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(/usr/local/include/lib/)
+INCLUDE_DIRECTORIES(/usr/local/include/)
+INCLUDE_DIRECTORIES(/usr/local/libs/)
+
 if(APPLE)
 # TensorFlow Lite Integration
 INCLUDE_DIRECTORIES(${SOURCE_DIR}/../tflite-dist/include/)

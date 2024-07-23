@@ -6,6 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <thread>
+#include <atomic>
 
 typedef struct {
     std::string endpointUrl;

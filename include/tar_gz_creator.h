@@ -7,6 +7,7 @@
 #include <tar.h>  // Header for libtar
 #include <zlib.h>
 #include <filesystem>
+#include <mutex>
 
 class TarGzCreator {
 public:

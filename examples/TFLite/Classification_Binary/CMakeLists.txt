@@ -27,7 +27,7 @@ if (MSVC)
   add_compile_options(/W4)
   set(CMAKE_DEBUG_POSTFIX "d")
 else()
-  add_compile_options(-Wall -pedantic -W -Wextra -lstdc++fs)
+  add_compile_options(-Wall -pedantic -W -Wextra)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
@@ -96,7 +96,7 @@ if(APPLE)
 else()
     target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR}/../tflite_v2/)
 endif()
-    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler tar curl pthread stdc++fs)
+    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler tar curl pthread)
 
 if(WIN32)
     add_custom_command(

@@ -4,7 +4,7 @@
  */
 #include "imagesampler.h"
 #include "imghelpers.h"
-#include "http_uploader.h"
+#include "iniparser.h"
 
 ImageSampler::~ImageSampler() {
     delete saver;
@@ -27,14 +27,6 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
         samplingConfig = parser.parseIniFile(conf_path, "sampling", "");
         statSavepath = samplingConfig["filepath"][0];
         dataSavepath = samplingConfig["filepath"][1];
-
-        std::string endpointUrl = samplingConfig["endpointUrl"][0];
-        std::string token = samplingConfig["token"][0];
-        std::string sensorId = samplingConfig["sensorId"][0];
-        std::string fileType = "data";
-        std::string upload_interval_str = samplingConfig["upload_interval"][0];
-        int upload_interval = atoi(upload_interval_str.c_str());
-        
         createFolderIfNotExists(statSavepath, dataSavepath);
         samplingConfig.erase("filepath");
 
@@ -44,19 +36,6 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
         }
 
         saver->StartSaving();
-
-        http_uploader_data_t http_uploader_data = {
-            endpointUrl,
-            token,
-            dataSavepath,
-            sensorId,
-            fileType,
-            true,
-            upload_interval,
-        };
-        http_uploader = new HttpUploader(http_uploader_data);
-
-        http_uploader->StartUpload(); 
     } catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
     }

@@ -13,7 +13,6 @@
 #include "generic.h"
 #include <kll_sketch.hpp>
 #include <frequent_items_sketch.hpp>
-#include "objectuploader.h"
 
 // Assuming declarations for Saver, distributionBox, ClassificationResult, and YoloDetection
 
@@ -61,7 +60,6 @@ public:
 #endif
 
   Saver *saver;
-    ImageUploader *uploader;
   // Member variables (declarations only, definitions in .cpp file)
   std::string model_id_;
   int top_classes_;

@@ -22,12 +22,14 @@ protected:
     void createSampleIniFile(const std::string& filename) {
         std::ofstream ini_file(filename, std::ios::trunc);
         ini_file << "[sampling]\n";
-        ini_file << "filepath = ./\n";
+        ini_file << "filepath = ./state/,./data/\n";
         ini_file << "MARGINCONFIDENCE = 0.1\n";  // Sample threshold for margin confidence
         ini_file << "LEASTCONFIDENCE = 0.2\n";
         ini_file << "RATIOCONFIDENCE = 0.3\n";
         ini_file << "ENTROPYCONFIDENCE = 0.4\n";
         ini_file.close();
+        mkdir("./state", 0766);
+        mkdir("./data", 0766);
     }
 
     // Helper function to clean up test files
@@ -41,7 +43,8 @@ protected:
 
 // Test Initialization
 TEST_F(ImageSamplerTest, Initialization) {
-    EXPECT_EQ(sampler->filesSavePath, "./");  // Expected file path
+    EXPECT_EQ(sampler->statSavepath, "./state/");  // Expected file path
+    EXPECT_EQ(sampler->dataSavepath, "./data/");  // Expected file path
 }
 
 // Test margin_confidence

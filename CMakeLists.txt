@@ -74,9 +74,7 @@ add_library(imagesampler SHARED
             src/helpers/iniparser.cpp
             src/helpers/imghelpers.cpp
             src/helpers/generic.cpp
-            src/helpers/http_uploader.cpp
             src/sampling/imagesampler.cpp
-            src/helpers/tar_gz_creator.cpp
 			)
 
 add_library(imageprofiler SHARED
@@ -92,12 +90,13 @@ add_library(modelprofiler SHARED
             src/helpers/iniparser.cpp
 	    src/helpers/generic.cpp
             src/profiles/modelprofile.cpp
-            )	
-    
-#add_library(lensaipublisher SHARED
-#            src/helpers/tar_gz_creator.cpp
-#	    src/helpers/http_uploader.cpp
-#            )
+            )
+
+add_library(lensaipublisher SHARED
+            src/helpers/iniparser.cpp
+            src/helpers/tar_gz_creator.cpp
+            src/helpers/http_uploader.cpp
+            )
 	    
 if(APPLE)
 message(STATUS "skipping TEST for MAC")
@@ -145,21 +144,21 @@ add_executable(model_profiler_test
                 src/profiles/tests/modelprofile_test.cpp
 	      )
 
-#add_executable(image_sampler_test
-#                src/helpers/saver.cpp
-#                src/helpers/iniparser.cpp
-#                src/helpers/imghelpers.cpp
-#		src/helpers/generic.cpp
-#                src/sampling/imagesampler.cpp
-#                src/sampling/tests/imagesampler_test.cpp
-#              )
+add_executable(image_sampler_test
+                src/helpers/saver.cpp
+                src/helpers/iniparser.cpp
+                src/helpers/imghelpers.cpp
+                src/helpers/generic.cpp
+                src/sampling/imagesampler.cpp
+                src/sampling/tests/imagesampler_test.cpp
+              )
 
 target_compile_definitions(ImageProcessingTest PRIVATE TEST)
 
 target_compile_definitions(IniParserTest PRIVATE TEST)
 target_compile_definitions(SaverTest PRIVATE TEST)
 target_compile_definitions(image_profiler_test PRIVATE TEST)
-#target_compile_definitions(image_sampler_test PRIVATE TEST)
+target_compile_definitions(image_sampler_test PRIVATE TEST)
 target_compile_definitions(model_profiler_test PRIVATE TEST)
 #target_compile_definitions(Http_uploader_test PRIVATE TEST)
 target_compile_definitions(Tar_GZ_test PRIVATE TEST)
@@ -168,7 +167,7 @@ target_link_libraries(ImageProcessingTest gtest gtest_main ${OpenCV_LIBS} pthrea
 target_link_libraries(IniParserTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
 target_link_libraries(SaverTest gtest gtest_main ${OpenCV_LIBS} pthread)
 target_link_libraries(image_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-#target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
+target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 target_link_libraries(model_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 #target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
 target_link_libraries(Tar_GZ_test gtest gtest_main tar z boost_filesystem boost_system pthread)
@@ -184,10 +183,10 @@ add_test(NAME model_profiler_test COMMAND model_profiler_test)
 #add_test(NAME  COMMAND )
 endif()
 
-target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
-target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
-target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
-#target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library
 install(TARGETS ${CMAKE_PROJECT_NAME}

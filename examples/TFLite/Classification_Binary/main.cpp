@@ -12,6 +12,7 @@
 #include <imagesampler.h>
 #include <imageprofile.h>
 #include <modelprofile.h>
+#include <http_uploader.h>
 #include <chrono>
 
 namespace fs = std::__fs::filesystem;
@@ -242,7 +243,8 @@ int main(int argc, char** argv) {
     ImageProfile image_profile(configFile, saveIntervalSec, channels);
     ModelProfile model_profile(modelName, configFile, saveIntervalSec, channels);
     ImageSampler image_sampler(configFile, saveIntervalSec);
-
+    HttpUploader http_uploader(configFile);
+    http_uploader.StartUpload();
     // Traverse image folder and run inference on each image
     for (const auto& entry : fs::directory_iterator(imageFolder)) {
         if (entry.is_regular_file() && (entry.path().extension() == ".JPEG" || entry.path().extension() == ".png")) {

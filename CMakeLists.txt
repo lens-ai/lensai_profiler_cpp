@@ -69,6 +69,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/datasketches)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
+set(TARGET_LIBS imagesampler imageprofiler modelprofiler lensaipublisher)
+
 add_library(imagesampler SHARED
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
@@ -136,6 +138,7 @@ add_executable(image_profiler_test
                 src/profiles/imageprofile.cpp
                 src/profiles/tests/imageprofile_test.cpp
               )
+
 add_executable(model_profiler_test
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
@@ -154,7 +157,6 @@ add_executable(image_sampler_test
               )
 
 target_compile_definitions(ImageProcessingTest PRIVATE TEST)
-
 target_compile_definitions(IniParserTest PRIVATE TEST)
 target_compile_definitions(SaverTest PRIVATE TEST)
 target_compile_definitions(image_profiler_test PRIVATE TEST)
@@ -189,8 +191,8 @@ target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library
-install(TARGETS ${CMAKE_PROJECT_NAME}
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS ${TARGET_LIBS}
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

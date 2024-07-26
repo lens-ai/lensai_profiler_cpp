@@ -23,11 +23,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # enable compiler warnings globally
 # derived from https://foonathan.net/blog/2018/10/17/cmake-warnings.html
 # and https://arne-mertz.de/2018/07/cmake-properties-options/
-if (MSVC)
-  add_compile_options(/W4)
-  set(CMAKE_DEBUG_POSTFIX "d")
+if(APPLE)
+  add_compile_options(-DAPPLE)
 else()
-  add_compile_options(-Wall -pedantic -W -Wextra)
+  add_compile_options(-DLINUX)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
@@ -93,10 +92,11 @@ add_executable(${PROJECT_NAME} main.cpp)
 if(APPLE)
     target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR}/../tflite-dist/libs/mac/)
     target_link_directories(${PROJECT_NAME} PRIVATE /usr/local/lib)
+    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler lensaipublisher tar curl pthread)
 else()
     target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR}/../tflite_v2/)
+    target_link_libraries(TFLiteCheck ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler lensaipublisher tar curl pthread)
 endif()
-    target_link_libraries(TFLiteCheck tensorflowlite ${OpenCV_LIBS} imagesampler imageprofiler modelprofiler lensaipublisher tar curl pthread)
 
 if(WIN32)
     add_custom_command(

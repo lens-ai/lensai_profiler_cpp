@@ -15,7 +15,7 @@
 #include <http_uploader.h>
 #include <chrono>
 
-namespace fs = std::__fs::filesystem;
+namespace fs = std::filesystem;
 
 std::vector<std::string> load_labels(const std::string& labels_file) {
     std::ifstream file(labels_file);
@@ -50,6 +50,7 @@ void printTensorInfo(tflite::Interpreter* interpreter, int tensor_index) {
     }
 }
 
+#ifdef APPLE
 void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* interpreter, const std::vector<std::string>& labels, const std::string& model_name, ImageProfile &image_profile, 
 	       ModelProfile &model_profile, ImageSampler &image_sampler) {
     // Get Input Tensor Dimensions
@@ -172,23 +173,23 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     }
 
     std::cout << "profiling image profile" <<std::endl;
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
     image_profile.profile(frame, true);
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     auto execution_time_imageprofile = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for image profile: " << execution_time_imageprofile <<std::endl; 
     
     std::cout << "profiling model profile" << std::endl;
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
     model_profile.log_classification_model_stats(10.0, top_results);
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     auto execution_time_modelprofile = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for model profile: " << execution_time_modelprofile << std::endl;
 
     std::cout << "profiling samper" << std::endl;
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
     image_sampler.sample(top_results, image, true);
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     auto execution_time_sampler = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for image sampler: " << execution_time_sampler << std::endl;
     std::cout << "Execution time inference :" << inference_time << std::endl;
@@ -196,6 +197,7 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     //cv::imshow("Output", frame);
     //cv::waitKey(0);
 }
+#endif
 
 int main(int argc, char** argv) {
     if (argc != 5) {
@@ -207,6 +209,7 @@ int main(int argc, char** argv) {
     const char* imageFolder = argv[3];
     const char* configFile = argv[4];
 
+#ifdef APPLE
     // Load Model
     std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromFile(modelFileName);
     if (!model) {
@@ -235,6 +238,7 @@ int main(int argc, char** argv) {
     // Load Labels
     auto labels = load_labels(labelFile);
    
+#endif
 
     int saveIntervalSec = 1;
     int channels = 3;
@@ -243,8 +247,14 @@ int main(int argc, char** argv) {
     ImageProfile image_profile(configFile, saveIntervalSec, channels);
     ModelProfile model_profile(modelName, configFile, saveIntervalSec, channels);
     ImageSampler image_sampler(configFile, saveIntervalSec);
-    HttpUploader http_uploader(configFile);
-    http_uploader.StartUpload();
+
+    HttpUploader data_uploader(configFile, "data_uploader");
+    data_uploader.StartUpload();
+
+    HttpUploader stats_uploader(configFile, "stats_uploader");
+    stats_uploader.StartUpload();
+
+#ifdef APPLE
     // Traverse image folder and run inference on each image
     for (const auto& entry : fs::directory_iterator(imageFolder)) {
         if (entry.is_regular_file() && (entry.path().extension() == ".JPEG" || entry.path().extension() == ".png")) {
@@ -253,6 +263,7 @@ int main(int argc, char** argv) {
 			    image_profile, model_profile, image_sampler);
         }
     }
+#endif
 
     return 0;
 }

@@ -29,7 +29,7 @@ int acquire_lock(const std::string& file_path) {
         log_err << "flock failed : " << lock_file << " : " << fd << std::endl;
         return -1;
     }
-    log_info << lock_file << " : " << fd << " success" << std::endl;
+    log_debug << lock_file << " : " << fd << " success" << std::endl;
     return fd;
 }
 
@@ -42,7 +42,7 @@ int release_lock(int fd) {
         return -1;
     }
     close(fd);
-    log_info << fd << " success" << std::endl;
+    log_debug << fd << " success" << std::endl;
     return 0;
 }
 

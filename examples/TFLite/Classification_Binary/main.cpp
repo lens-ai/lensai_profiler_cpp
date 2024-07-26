@@ -171,6 +171,11 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
 	std::cout << output_txt << std::endl;
         //cv::putText(frame, output_txt, cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 0, 255), 2);
     }
+    
+    // Extract embeddings from the penultimate layer
+    int penultimate_layer_index = interpreter->outputs()[1]; // Assuming the model is configured to output embeddings
+    TfLiteTensor* penultimate_tensor = interpreter->tensor(penultimate_layer_index);
+    std::vector<float> embeddings(penultimate_tensor->data.f, penultimate_tensor->data.f + penultimate_tensor->bytes / sizeof(float));
 
     std::cout << "profiling image profile" <<std::endl;
     start = std::chrono::steady_clock::now();
@@ -182,6 +187,7 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     std::cout << "profiling model profile" << std::endl;
     start = std::chrono::steady_clock::now();
     model_profile.log_classification_model_stats(10.0, top_results);
+    model_profile.log_embeddings(embeddings);
     end = std::chrono::steady_clock::now();
     auto execution_time_modelprofile = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for model profile: " << execution_time_modelprofile << std::endl;

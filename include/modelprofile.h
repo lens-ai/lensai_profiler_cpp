@@ -42,7 +42,7 @@ public:
    * @return 0 on success, negative value on error
    */
   int log_classification_model_stats(float inference_latency, const ClassificationResults& results);
-
+  void log_embeddings(const std::vector<float>& embeddings);
   /**
    * @brief Logs statistics for a YOLOv5 model
    * @param inference_latency Time taken for model inference
@@ -54,7 +54,7 @@ public:
   frequent_class_sketch *sketch1;
   int getNumDistributionBoxes() const;
   const distributionBox& getDistributionBox(unsigned int index) const;
-
+  void registerStatistics();
 #ifndef TEST
   private:
 #endif
@@ -71,6 +71,7 @@ public:
   std::vector<double> objectnessbox_;
   distributionBox *dBox;
   std::map<int, distributionBox*> model_classes_stat_;
+  distributionBox *model_embeddings;
 };
 
 #endif // MODEL_STATS_H

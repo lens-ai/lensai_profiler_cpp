@@ -7,6 +7,7 @@ ModelProfile::~ModelProfile() {
         delete pair.second;
     }
     delete sketch1;
+    delete model_embeddings;
 }
 
 /**
@@ -36,6 +37,8 @@ ModelProfile::ModelProfile(std::string model_id, std::string conf_path,
   createFolderIfNotExists(statSavepath, dataSavepath);
   top_classes_ = top_classes;
   sketch1 = new frequent_class_sketch(64);
+  model_embeddings = new distributionBox(200);
+  registerStatistics();
   saver->StartSaving();
 #ifndef TEST
     /*int uploadtype=0;
@@ -53,6 +56,10 @@ int ModelProfile::getNumDistributionBoxes() const {
         return top_classes_;
     }
 
+// Register Model embeddings saver
+void ModelProfile::registerStatistics(){
+   saver->AddObjectToSave((void*)(&model_embeddings), KLL_TYPE, statSavepath + "embeddings.bin");
+}
 /**
  * @brief Logs classification model statistics
  * @param inference_latency Time taken for model inference
@@ -82,4 +89,10 @@ int ModelProfile::log_classification_model_stats(float inference_latency __attri
         sketch1->update(std::to_string(cls));  // Placeholder for storing frequent class IDs
     }
   return 0; // Assuming successful logging, replace with error handling if needed
+}
+
+void ModelProfile::log_embeddings(const std::vector<float>& embeddings) {
+    for (const auto& value : embeddings) {
+        model_embeddings->update(value);
+    }
 }

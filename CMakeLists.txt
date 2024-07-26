@@ -72,30 +72,31 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 set(TARGET_LIBS imagesampler imageprofiler modelprofiler lensaipublisher)
 
 add_library(imagesampler SHARED
+            src/helpers/generic.cpp
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
             src/helpers/imghelpers.cpp
-            src/helpers/generic.cpp
             src/sampling/imagesampler.cpp
 			)
 
 add_library(imageprofiler SHARED
-			src/helpers/saver.cpp
-			src/helpers/iniparser.cpp
-                        src/helpers/imghelpers.cpp
-			src/helpers/generic.cpp
-			src/profiles/imageprofile.cpp
+            src/helpers/generic.cpp
+            src/helpers/saver.cpp
+            src/helpers/iniparser.cpp
+            src/helpers/imghelpers.cpp
+            src/profiles/imageprofile.cpp
 			)
 
 add_library(modelprofiler SHARED 
+            src/helpers/generic.cpp
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
-	    src/helpers/generic.cpp
             src/profiles/modelprofile.cpp
             )
 
 add_library(lensaipublisher SHARED
             src/helpers/iniparser.cpp
+            src/helpers/generic.cpp
             src/helpers/tar_gz_creator.cpp
             src/helpers/http_uploader.cpp
             )
@@ -126,32 +127,33 @@ add_executable(IniParserTest
               )
 
 add_executable(SaverTest
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/tests/saver_test.cpp
               )
 
 add_executable(image_profiler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
                 src/helpers/imghelpers.cpp
-		src/helpers/generic.cpp
                 src/profiles/imageprofile.cpp
                 src/profiles/tests/imageprofile_test.cpp
               )
 
 add_executable(model_profiler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
-		src/helpers/generic.cpp
                 src/profiles/modelprofile.cpp
                 src/profiles/tests/modelprofile_test.cpp
-	      )
+              )
 
 add_executable(image_sampler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
                 src/helpers/imghelpers.cpp
-                src/helpers/generic.cpp
                 src/sampling/imagesampler.cpp
                 src/sampling/tests/imagesampler_test.cpp
               )
@@ -192,7 +194,7 @@ target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARI
 
 # Install the library
 install(TARGETS ${TARGET_LIBS}
-	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

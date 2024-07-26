@@ -1,6 +1,7 @@
 #include "saver.h"
 #include <fstream>
-#include "datatracer_log.h"
+#include <datatracer_log.h>
+#include <generic.h>
 
 #include <kll_sketch.hpp>
 #include <frequent_items_sketch.hpp>
@@ -112,6 +113,12 @@ void Saver::SaveObjectToFile(data_object_t *object) {
     if (dirSize >= (object->max_size * 1024))
         return;
 
+    int fd = acquire_lock(baseDir);
+    log_info << baseDir << " " << fd << std::endl;
+
+    if (fd == -1)
+        return;
+
     try {
     switch(object->type) {
         case KLL_TYPE:{
@@ -128,6 +135,7 @@ void Saver::SaveObjectToFile(data_object_t *object) {
     } catch (const std::exception& e) {
             log_err << parent_name << " : Error saving file: " << e.what() << std::endl;
     }
+    release_lock(fd);
 }
 
 void Saver::StopSaving(void) {

@@ -7,8 +7,18 @@
 
 #include "http_uploader.h"
 #include "iniparser.h"
+#include "generic.h"
+#include "datatracer_log.h"
 
 namespace fs = std::filesystem;
+
+#define uploader_err log_err << uploader_name_ << ": "
+#define uploader_info log_info << uploader_name_ << ": "
+#if DEBUG
+#define uploader_debug log_debug << uploader_name_ << ": "
+#else
+#define uploader_debug if (0) std::cout
+#endif
 
 HttpUploader::~HttpUploader() {
     {
@@ -17,33 +27,36 @@ HttpUploader::~HttpUploader() {
     } 
 }
 
-HttpUploader::HttpUploader(const std::string& conf_path)
-{
+HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uploader_name)
+:uploader_name_(uploader_name) {
     try { 
         // Read configuration settings                                        
         IniParser parser;
-        lensaipublisherConfig = parser.parseIniFile(conf_path, "lensaipublisher", "");
+        lensaipublisherConfig = parser.parseIniFile(conf_path, uploader_name, "");
 
         http_uploader_data_.endpointUrl = lensaipublisherConfig["http_endpoint"][0];
         http_uploader_data_.token = lensaipublisherConfig["token"][0];
         http_uploader_data_.sensorId = lensaipublisherConfig["sensorId"][0];
-        std::cout << lensaipublisherConfig["folderPath"].size() << std::endl;
+        uploader_debug << lensaipublisherConfig["folderPath"].size() << std::endl;
 
         for (int i=0; i < lensaipublisherConfig["folderPath"].size(); i++) {
-            std::cout << "folderPath[" << i << "]" << "=" << lensaipublisherConfig["folderPath"][i] << std::endl;
+            uploader_debug << "[" << i << "]" << std::endl;
+            uploader_debug << "\tfolderPath" << "=" << lensaipublisherConfig["folderPath"][i] << std::endl;
             http_uploader_data_.folderPath.push_back(lensaipublisherConfig["folderPath"][i]);
-        }
 
-        for (int i=0; i < lensaipublisherConfig["fileType"].size(); i++) {
-            std::cout << "fileType[" << i << "]" << "=" << lensaipublisherConfig["fileType"][i] << std::endl;
+            uploader_debug << "\tfileType" << "=" << lensaipublisherConfig["fileType"][i] << std::endl;
             http_uploader_data_.fileType.push_back(lensaipublisherConfig["fileType"][i]);
+
+            uploader_debug << "\tdeletedata" << "=" << lensaipublisherConfig["deletedata"][i] << std::endl;
+            bool deletedata =  (lensaipublisherConfig["deletedata"][i] == "true");
+            http_uploader_data_.deletedata.push_back(deletedata);
         }
 
         std::string upload_interval_str = lensaipublisherConfig["upload_interval"][0];
         http_uploader_data_.interval = atoi(upload_interval_str.c_str());
 
     } catch (const std::runtime_error& e) {
-        std::cerr << e.what() << std::endl;
+        uploader_err << e.what() << std::endl;
     }
 }
 
@@ -89,6 +102,7 @@ void HttpUploader::StopUpload(void) {
 }
 
 bool HttpUploader::uploadFolder(int &index) {
+    bool ret = false;
     // Get current time as time_point
     auto now = std::chrono::system_clock::now();
     // Convert to time_t
@@ -101,28 +115,39 @@ bool HttpUploader::uploadFolder(int &index) {
     std::string tarFilePath = "archive.tar";
     std::string gzFilePath = "archive.tar.gz";
 
+    int fd = acquire_lock(folders[0]);
+    if (fd == -1) {
+        uploader_err << "Failed to acquire_lock." << std::endl;
+        return ret;
+    }
+
     if (!tarGzCreator.createTar(tarFilePath, files)) {
-        std::cerr << "Failed to create tar file." << std::endl;
-        return false;
+        uploader_err << "Failed to create tar file." << std::endl;
+        goto del_tar_gz;
     }
 
     // Step 2: Compress to tar.gz
     if (!tarGzCreator.compressToGz(tarFilePath, gzFilePath)) {
-        std::cerr << "Failed to compress tar file to gz." << std::endl;
-        return false;
+        uploader_err << "Failed to compress tar file to gz." << std::endl;
+        goto del_tar_gz;
     }
 
-    // Step 3: Empty the folder
-    if (!tarGzCreator.emptyFolder(http_uploader_data_.folderPath[index]) && http_uploader_data_.deletedata) {
-        std::cerr << "Failed to empty the folder." << std::endl;
-        return false;
+    // Step 3: Upload the file
+    for(int retry = 0; retry < UPLOAD_RETRY_COUNT; retry++) {
+        if (postFile(gzFilePath, http_uploader_data_.sensorId, timestamp, http_uploader_data_.fileType[index])) {
+            ret = true;
+            // Step 4: Empty the folder
+            if (!tarGzCreator.emptyFolder(http_uploader_data_.folderPath[index]) && http_uploader_data_.deletedata[index]) {
+                uploader_err << "Failed to empty the folder." << std::endl;
+            }           
+            goto del_tar_gz;
+        }
+        uploader_err << "Failed to upload gz file. Try - " << retry << std::endl;
+        sleep(1);
     }
 
-    // Step 4: Upload the file
-    if (!postFile(gzFilePath, http_uploader_data_.sensorId, timestamp, http_uploader_data_.fileType[index])) {
-        std::cerr << "Failed to upload gz file." << std::endl;
-        return false;
-    }
+del_tar_gz:
+    release_lock(fd);
 
     // Step 5: Delete the gz file
     if (fs::exists(gzFilePath)) {
@@ -134,7 +159,7 @@ bool HttpUploader::uploadFolder(int &index) {
         fs::remove(tarFilePath);
     }
 
-    return true;
+    return ret;
 }
 
 bool HttpUploader::postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType) {

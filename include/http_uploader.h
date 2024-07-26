@@ -9,20 +9,21 @@
 #include <atomic>
 #include <map>
 
+#define UPLOAD_RETRY_COUNT 2
 typedef struct {
     std::string endpointUrl;
     std::string token;
     std::vector<std::string> folderPath;
     std::string sensorId;
     std::vector<std::string> fileType;
-    bool deletedata;
+    std::vector<bool> deletedata;
     int interval;
 }http_uploader_data_t;
 
 class HttpUploader {
 public:
     ~HttpUploader();
-    HttpUploader(const std::string& conf_path);
+    HttpUploader(const std::string& conf_path, const std::string& uploader_name);
 
     void StartUpload();
     void StopUpload();
@@ -35,6 +36,8 @@ private:
     std::mutex upload_mutex_;         // Mutex for queue access
 
     std::atomic<bool> exitUploadLoop;
+
+    std::string uploader_name_;
 
     bool postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType);
     bool uploadFolder(int &index);

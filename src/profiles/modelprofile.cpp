@@ -22,12 +22,11 @@ ModelProfile::~ModelProfile() {
  * @param saver Reference to a Saver object used for saving model statistics
  */
 ModelProfile::ModelProfile(std::string model_id, std::string conf_path,
-	       	int save_interval, int top_classes) {
+	       	int save_interval, int top_classes): saver(new Saver(save_interval, "ModelProfile")){
     std::string endpointUrl="";
     std::string token="";
 
   // Set member variables
-  saver = new Saver(save_interval, "ModelProfile");
   model_id_ = model_id;
   IniParser parser;
   modelConfig = parser.parseIniFile(conf_path,
@@ -58,7 +57,7 @@ int ModelProfile::getNumDistributionBoxes() const {
 
 // Register Model embeddings saver
 void ModelProfile::registerStatistics(){
-   saver->AddObjectToSave((void*)(&model_embeddings), KLL_TYPE, statSavepath + "embeddings.bin");
+   saver->AddObjectToSave((void*)(model_embeddings), KLL_TYPE, statSavepath + "embeddings.bin");
 }
 /**
  * @brief Logs classification model statistics

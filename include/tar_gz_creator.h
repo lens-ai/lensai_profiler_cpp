@@ -1,12 +1,9 @@
 #ifndef TAR_GZ_CREATOR_H
 #define TAR_GZ_CREATOR_H
 
+#include <libtar.h>
 #include <vector>
 #include <string>
-#include <libtar.h>
-#include <tar.h>  // Header for libtar
-#include <zlib.h>
-#include <filesystem>
 #include <mutex>
 
 class TarGzCreator {
@@ -20,7 +17,7 @@ public:
     bool emptyFolder(const std::string& folderPath); // New function to empty folder
 
 private:
-    void addPadding(std::ofstream& stream, std::streamsize size);
+    void add_file_to_tar(TAR *tar, const std::string& path);
     std::mutex folderMutex; // Mutex for thread-safe folder access
 };
 

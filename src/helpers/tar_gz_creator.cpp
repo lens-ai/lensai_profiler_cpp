@@ -1,13 +1,29 @@
 #include "tar_gz_creator.h"
-#include <fstream>
-#include <vector>
-#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <zlib.h>
 #include <filesystem>
+#include <fcntl.h>
+#include <iostream>
+#include <fstream>
 #include <cstring>
 
 namespace fs = std::filesystem;
 
 TarGzCreator::TarGzCreator() {}
+
+void TarGzCreator::add_file_to_tar(TAR *tar, const std::string& path) {
+    std::cout << path << std::endl;
+
+    if (tar_append_file(tar, path.c_str(), path.c_str()) == -1) {
+        perror("tar_append_file");
+        exit(1);
+    }
+}
 
 std::vector<std::string> TarGzCreator::collectFilesFromFolders(const std::vector<std::string>& folders) {
     std::vector<std::string> collectedFiles;
@@ -27,63 +43,29 @@ std::vector<std::string> TarGzCreator::collectFilesFromFolders(const std::vector
     return collectedFiles;
 }
 
-void TarGzCreator::addPadding(std::ofstream& stream, std::streamsize size) {
-    std::streamsize padding = 512 - (size % 512);
-    if (padding != 512) {
-        std::vector<char> paddingBuffer(padding, '\0');
-        stream.write(paddingBuffer.data(), paddingBuffer.size());
-    }
-}
-
 bool TarGzCreator::createTar(const std::string& tarFilePath, const std::vector<std::string>& filePaths) {
-    std::ofstream tarFile(tarFilePath, std::ios::binary | std::ios::trunc);
+    TAR *tar;
+    int flags = O_WRONLY | O_CREAT | O_TRUNC;
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
-    if (!tarFile.is_open()) {
-        return false;
+    // Open the TAR file for writing
+    if (tar_open(&tar, tarFilePath.c_str(), NULL, flags, mode, TAR_GNU) == -1) {
+        perror("tar_open");
+        exit(1);
     }
 
+    // Add each file to the TAR archive
     for (const auto& filePath : filePaths) {
-        std::ifstream inputFile(filePath, std::ios::binary | std::ios::ate);
-
-        if (!inputFile.is_open()) {
-            std::cerr << "Failed to open file: " << filePath << std::endl;
-            continue;
-        }
-
-        std::streamsize size = inputFile.tellg();
-        inputFile.seekg(0, std::ios::beg);
-
-        std::vector<char> buffer(size);
-        inputFile.read(buffer.data(), size);
-
-        struct tar_header header = {};
-        std::memset(&header, 0, sizeof(header));
-
-        std::string relativePath = fs::relative(filePath).string();
-        std::strncpy(header.name, relativePath.c_str(), sizeof(header.name) - 1);
-
-        snprintf(header.size, sizeof(header.size), "%011o", static_cast<int>(size));
-        snprintf(header.mode, sizeof(header.mode), "%07o", 0644);
-        snprintf(header.mtime, sizeof(header.mtime), "%011ld", std::time(nullptr));
-        header.typeflag = '0';
-
-        unsigned int checksum = 0;
-        for (size_t i = 0; i < sizeof(header); ++i) {
-            checksum += static_cast<unsigned char>(reinterpret_cast<char*>(&header)[i]);
-        }
-        snprintf(header.chksum, sizeof(header.chksum), "%06o", checksum);
-
-        tarFile.write(reinterpret_cast<char*>(&header), sizeof(header));
-        tarFile.write(buffer.data(), buffer.size());
-
-        addPadding(tarFile, size);
+        add_file_to_tar(tar, filePath);
     }
 
-    std::vector<char> eof(1024, '\0');
-    tarFile.write(eof.data(), eof.size());
+    // Close the TAR file
+    if (tar_close(tar) == -1) {
+        perror("tar_close");
+        exit(1);
+    }
 
-    tarFile.close();
-
+    std::cout << "Files added to " << tarFilePath << " successfully." << std::endl;
     return true;
 }
 
@@ -97,6 +79,7 @@ bool TarGzCreator::compressToGz(const std::string& tarFilePath, const std::strin
 
     std::streamsize size = tarFile.tellg();
     tarFile.seekg(0, std::ios::beg);
+    std::cout << "compressToGz : " << size << std::endl;
 
     std::vector<char> buffer(size);
     tarFile.read(buffer.data(), size);
@@ -136,45 +119,6 @@ bool TarGzCreator::decompressGz(const std::string& gzFilePath, const std::string
 
 // Function to unpack a tar archive
 bool TarGzCreator::unpackTar(const std::string& tarFilePath, const std::string& outputFolderPath) {
-    std::ifstream tarFile(tarFilePath, std::ios::binary);
-    if (!tarFile.is_open()) {
-        return false;
-    }
-
-    while (tarFile) {
-        struct tar_header header = {};
-        tarFile.read(reinterpret_cast<char*>(&header), sizeof(header));
-
-        if (tarFile.gcount() == 0) {
-            break; // End of tarball
-        }
-
-        // Get the file size from the tar header
-        std::streamsize size = std::stoul(std::string(header.size), nullptr, 8);
-
-        std::string relativeFilePath(header.name);
-        std::string outputFilePath = outputFolderPath + "/" + relativeFilePath;
-
-        // Create directories as needed
-        fs::create_directories(fs::path(outputFilePath).parent_path());
-
-        std::ofstream outputFile(outputFilePath, std::ios::binary | std::ios::trunc);
-        if (!outputFile.is_open()) {
-            return false;
-        }
-
-        std::vector<char> buffer(size);
-        tarFile.read(buffer.data(), size);
-        outputFile.write(buffer.data(), buffer.size());
-
-        outputFile.close();
-
-        // Skip padding to align with 512-byte blocks
-        tarFile.seekg((512 - (size % 512)) % 512, std::ios::cur);
-    }
-
-    tarFile.close();
-
     return true;
 }
 

@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 #include <filesystem>
 #include <iostream>
+#include <unistd.h>
 
 #include "http_uploader.h"
 #include "iniparser.h"

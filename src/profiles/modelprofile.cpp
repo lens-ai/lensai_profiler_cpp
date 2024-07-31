@@ -90,6 +90,9 @@ int ModelProfile::log_classification_model_stats(float inference_latency __attri
   return 0; // Assuming successful logging, replace with error handling if needed
 }
 
+/**
+ * @brief Logs embeddings 
+ */
 void ModelProfile::log_embeddings(const std::vector<float>& embeddings) {
     for (const auto& value : embeddings) {
         model_embeddings->update(value);

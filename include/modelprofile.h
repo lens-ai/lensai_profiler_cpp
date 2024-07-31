@@ -42,14 +42,12 @@ public:
    * @return 0 on success, negative value on error
    */
   int log_classification_model_stats(float inference_latency, const ClassificationResults& results);
-  void log_embeddings(const std::vector<float>& embeddings);
   /**
-   * @brief Logs statistics for a YOLOv5 model
-   * @param inference_latency Time taken for model inference
-   * @param results Reference to the detection results from YOLOv5 model
-   * @return 0 on success, negative value on error
-   */
-  //int log_yolov5_model_stats(float inference_latency, const YoloDetections& results);
+   * @brief Logs model embeddings from the model
+   * @param vector of embeddings
+   * return 0 on sucess, negative value on error
+   * */
+  void log_embeddings(const std::vector<float>& embeddings);
 
   frequent_class_sketch *sketch1;
   int getNumDistributionBoxes() const;

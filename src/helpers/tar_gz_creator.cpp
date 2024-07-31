@@ -85,6 +85,7 @@ bool TarGzCreator::compressToGz(const std::string& tarFilePath, const std::strin
     gzFile gzOutput = gzopen(gzFilePath.c_str(), "wb");
 
     if (!tarFile.is_open() || !gzOutput) {
+        std::cerr << "compressToGz : " << tarFile.is_open() << " gzOutput: " << gzOutput << std::endl;
         return false;
     }
 

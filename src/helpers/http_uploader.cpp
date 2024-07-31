@@ -115,8 +115,8 @@ bool HttpUploader::uploadFolder(int &index) {
     // Step 1: Create tar file
     std::vector<std::string> folders = { http_uploader_data_.folderPath[index]};
     std::vector<std::string> files = tarGzCreator.collectFilesFromFolders(folders);
-    std::string tarFilePath = "archive.tar";
-    std::string gzFilePath = "archive.tar.gz";
+    std::string tarFilePath = http_uploader_data_.folderPath[index] + "_archive_lock.tar";
+    std::string gzFilePath = http_uploader_data_.folderPath[index] + "_archive_lock.tar.gz";
 
     int fd = acquire_lock(folders[0]);
     if (fd == -1) {

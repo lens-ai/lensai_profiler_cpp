@@ -16,12 +16,22 @@ namespace fs = std::filesystem;
 
 TarGzCreator::TarGzCreator() {}
 
-void TarGzCreator::add_file_to_tar(TAR *tar, const std::string& path) {
-    std::cout << path << std::endl;
+void TarGzCreator::add_file_to_tar(TAR *tar, const std::string& path,
+                                    const std::string& basePath) {
+    std::string path_in_tar;
+    size_t pos = path.find(basePath);
 
-    if (tar_append_file(tar, path.c_str(), path.c_str()) == -1) {
+    std::cout << "add_file_to_tar : " << path << " : " << basePath << std::endl;
+
+    if (pos != std::string::npos) {
+        path_in_tar = path.substr(pos+basePath.length());
+    } else {
+        path_in_tar = path;
+    }
+ 
+    if (tar_append_file(tar, path.c_str(), path_in_tar.c_str()) == -1) {
         perror("tar_append_file");
-        exit(1);
+        return;
     }
 }
 
@@ -43,7 +53,7 @@ std::vector<std::string> TarGzCreator::collectFilesFromFolders(const std::vector
     return collectedFiles;
 }
 
-bool TarGzCreator::createTar(const std::string& tarFilePath, const std::vector<std::string>& filePaths) {
+bool TarGzCreator::createTar(const std::string& tarFilePath, const std::vector<std::string>& filePaths, const std::string& basePath) {
     TAR *tar;
     int flags = O_WRONLY | O_CREAT | O_TRUNC;
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -51,18 +61,19 @@ bool TarGzCreator::createTar(const std::string& tarFilePath, const std::vector<s
     // Open the TAR file for writing
     if (tar_open(&tar, tarFilePath.c_str(), NULL, flags, mode, TAR_GNU) == -1) {
         perror("tar_open");
-        exit(1);
+        return false;
     }
 
     // Add each file to the TAR archive
     for (const auto& filePath : filePaths) {
-        add_file_to_tar(tar, filePath);
+        if (filePath.find("_lock") == std::string::npos)
+            add_file_to_tar(tar, filePath, basePath);
     }
 
     // Close the TAR file
     if (tar_close(tar) == -1) {
         perror("tar_close");
-        exit(1);
+        return false;
     }
 
     std::cout << "Files added to " << tarFilePath << " successfully." << std::endl;
@@ -126,10 +137,14 @@ bool TarGzCreator::emptyFolder(const std::string& folderPath) {
     std::lock_guard<std::mutex> lock(folderMutex); // Lock the folder access
 
     try {
-        for (const auto& entry : fs::directory_iterator(folderPath)) {
-            if (fs::is_regular_file(entry.path())) {
-                fs::remove(entry.path());
+        if (fs::exists(folderPath) && fs::is_directory(folderPath)) {
+            for (const auto& entry : fs::recursive_directory_iterator(folderPath)) {
+                if (fs::is_regular_file(entry.path())) {
+                    fs::remove(entry.path());
+                }
             }
+        } else {
+            std::cerr << "Directory not found: " << folderPath << std::endl;
         }
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Error emptying folder: " << e.what() << std::endl;

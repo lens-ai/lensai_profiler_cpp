@@ -38,23 +38,24 @@ HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uplo
         http_uploader_data_.endpointUrl = lensaipublisherConfig["http_endpoint"][0];
         http_uploader_data_.token = lensaipublisherConfig["token"][0];
         http_uploader_data_.sensorId = lensaipublisherConfig["sensorId"][0];
-        uploader_debug << lensaipublisherConfig["folderPath"].size() << std::endl;
+        uploader_info << lensaipublisherConfig["folderPath"].size() << std::endl;
 
         for (int i=0; i < lensaipublisherConfig["folderPath"].size(); i++) {
-            uploader_debug << "[" << i << "]" << std::endl;
-            uploader_debug << "\tfolderPath" << "=" << lensaipublisherConfig["folderPath"][i] << std::endl;
+            uploader_info << "[" << i << "]" << std::endl;
+            uploader_info << "\tfolderPath" << "=" << lensaipublisherConfig["folderPath"][i] << std::endl;
             http_uploader_data_.folderPath.push_back(lensaipublisherConfig["folderPath"][i]);
 
-            uploader_debug << "\tfileType" << "=" << lensaipublisherConfig["fileType"][i] << std::endl;
+            uploader_info << "\tfileType" << "=" << lensaipublisherConfig["fileType"][i] << std::endl;
             http_uploader_data_.fileType.push_back(lensaipublisherConfig["fileType"][i]);
 
-            uploader_debug << "\tdeletedata" << "=" << lensaipublisherConfig["deletedata"][i] << std::endl;
+            uploader_info << "\tdeletedata" << "=" << lensaipublisherConfig["deletedata"][i] << std::endl;
             bool deletedata =  (lensaipublisherConfig["deletedata"][i] == "true");
             http_uploader_data_.deletedata.push_back(deletedata);
         }
 
         std::string upload_interval_str = lensaipublisherConfig["upload_interval"][0];
         http_uploader_data_.interval = atoi(upload_interval_str.c_str());
+        
 
     } catch (const std::runtime_error& e) {
         uploader_err << e.what() << std::endl;
@@ -62,6 +63,7 @@ HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uplo
 }
 
 void HttpUploader::StartUpload() {
+    exitUploadLoop.store(false);
     upload_thread_ = std::thread(&HttpUploader::UploadLoop, this);
 }
 
@@ -122,7 +124,7 @@ bool HttpUploader::uploadFolder(int &index) {
         return ret;
     }
 
-    if (!tarGzCreator.createTar(tarFilePath, files)) {
+    if (!tarGzCreator.createTar(tarFilePath, files, http_uploader_data_.folderPath[index])) {
         uploader_err << "Failed to create tar file." << std::endl;
         goto del_tar_gz;
     }
@@ -138,9 +140,10 @@ bool HttpUploader::uploadFolder(int &index) {
         if (postFile(gzFilePath, http_uploader_data_.sensorId, timestamp, http_uploader_data_.fileType[index])) {
             ret = true;
             // Step 4: Empty the folder
+            uploader_info << "emptyFolder " << http_uploader_data_.folderPath[index] << " : " << http_uploader_data_.deletedata[index] << std::endl;
             if (!tarGzCreator.emptyFolder(http_uploader_data_.folderPath[index]) && http_uploader_data_.deletedata[index]) {
                 uploader_err << "Failed to empty the folder." << std::endl;
-            }           
+            }
             goto del_tar_gz;
         }
         uploader_err << "Failed to upload gz file. Try - " << retry << std::endl;

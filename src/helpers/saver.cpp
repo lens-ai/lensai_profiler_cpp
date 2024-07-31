@@ -114,7 +114,7 @@ void Saver::SaveObjectToFile(data_object_t *object) {
         return;
 
     int fd = acquire_lock(baseDir);
-    log_info << baseDir << " " << fd << std::endl;
+    log_debug << baseDir << " " << fd << std::endl;
 
     if (fd == -1)
         return;

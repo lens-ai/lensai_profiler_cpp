@@ -6,7 +6,7 @@
 // Forward declaration for potential future class usage (optional)
 // class FileSystemHelper;
 
-namespace fs = std::__fs::filesystem;  // Namespace alias for readability
+namespace fs = std::filesystem;  // Namespace alias for readability
 
 /**
  * @brief Checks if a path exists and creates a folder if it doesn't exist.
@@ -19,7 +19,10 @@ namespace fs = std::__fs::filesystem;  // Namespace alias for readability
  *
  * @return bool True if the folder is created or already exists, false on error.
  */
-bool createFolderIfNotExists(const std::string& path);
+bool createFolderIfNotExists(const std::string& statSavepath, const std::string& dataSavepath);
+
+int acquire_lock(const std::string& file_path);
+int release_lock(int fd);
 
 #endif // GENERIC_H
 

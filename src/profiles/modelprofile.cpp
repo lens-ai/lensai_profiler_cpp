@@ -29,10 +29,11 @@ ModelProfile::ModelProfile(std::string model_id, std::string conf_path,
   saver = new Saver(save_interval, "ModelProfile");
   model_id_ = model_id;
   IniParser parser;
-  modelConfig = parser.parseIniFileNew(conf_path,
+  modelConfig = parser.parseIniFile(conf_path,
                           "model", "");
-  filesSavePath = modelConfig["filepath"][0];
-  createFolderIfNotExists(filesSavePath);
+  statSavepath = modelConfig["filepath"][0];
+  dataSavepath = modelConfig["filepath"][1];
+  createFolderIfNotExists(statSavepath, dataSavepath);
   top_classes_ = top_classes;
   sketch1 = new frequent_class_sketch(64);
   saver->StartSaving();
@@ -76,7 +77,7 @@ int ModelProfile::log_classification_model_stats(float inference_latency __attri
             model_classes_stat_[cls] = dBox;
             model_classes_stat_[cls]->update(score);
             saver->AddObjectToSave((void *)(dBox), KLL_TYPE,
-                                   filesSavePath + model_id_ + std::to_string(cls) + ".bin");  // Register with Saver for saving
+                                   statSavepath + model_id_ + std::to_string(cls) + ".bin");  // Register with Saver for saving
         }
         sketch1->update(std::to_string(cls));  // Placeholder for storing frequent class IDs
     }

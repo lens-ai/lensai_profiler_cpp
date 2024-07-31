@@ -33,9 +33,11 @@ ImageProfile::ImageProfile(const std::string& conf_path, int save_interval, int 
     try {
         // Read configuration settings
         IniParser parser;
-        imageConfig = parser.parseIniFileNew(conf_path, "image", "");
-        filesSavePath = imageConfig["filepath"][0];
-        createFolderIfNotExists(filesSavePath);
+        imageConfig = parser.parseIniFile(conf_path, "image", "");
+	statSavepath = imageConfig["filepath"][0];
+	dataSavepath = 	imageConfig["filepath"][1];
+	std::cout << statSavepath << dataSavepath << std::endl;
+        createFolderIfNotExists(statSavepath, dataSavepath);
         imageConfig.erase("filepath");
 
         // Register statistics for saving based on configuration
@@ -60,10 +62,9 @@ int ImageProfile::profile(cv::Mat& img, bool save_sample) {
         float stat_score = computeStatistic(config.first, img);
 
         if (save_sample && isThresholdExceeded(config.first, stat_score, config.second)) {
-            saveImageWithTimestamp(img, filesSavePath, config.first);
+            saveImageWithTimestamp(img, dataSavepath, config.first);
         }
     }
-
     return 1; // Indicate success
 }
 
@@ -73,22 +74,22 @@ int ImageProfile::profile(cv::Mat& img, bool save_sample) {
  */
 void ImageProfile::registerStatistics(const std::string& name) {
     if (name == "NOISE") {
-        saver->AddObjectToSave((void*)(&noiseBox), KLL_TYPE, filesSavePath + "noise.bin");
+        saver->AddObjectToSave((void*)(&noiseBox), KLL_TYPE, statSavepath + "noise.bin");
     } else if (name == "BRIGHTNESS") {
-        saver->AddObjectToSave((void*)(&brightnessBox), KLL_TYPE, filesSavePath + "brightness.bin");
+        saver->AddObjectToSave((void*)(&brightnessBox), KLL_TYPE, statSavepath + "brightness.bin");
     } else if (name == "SHARPNESS") {
-        saver->AddObjectToSave((void*)(&sharpnessBox), KLL_TYPE, filesSavePath + "sharpness.bin");
+        saver->AddObjectToSave((void*)(&sharpnessBox), KLL_TYPE, statSavepath + "sharpness.bin");
     } else if (name == "MEAN") {
         for (int i = 0; i < channels; ++i) {
             auto* dbox = new distributionBox(200);
             meanBox.push_back(dbox);
-            saver->AddObjectToSave((void*)(dbox), KLL_TYPE, filesSavePath + "mean_" + std::to_string(i) + ".bin");
+            saver->AddObjectToSave((void*)(dbox), KLL_TYPE, statSavepath + "mean_" + std::to_string(i) + ".bin");
         }
     } else if (name == "HISTOGRAM") {
         for (int i = 0; i < channels; ++i) {
             auto* dbox_hist = new distributionBox(200);
             pixelBox.push_back(dbox_hist);
-            saver->AddObjectToSave((void*)(dbox_hist), KLL_TYPE, filesSavePath + "pixel_" + std::to_string(i) + ".bin");
+            saver->AddObjectToSave((void*)(dbox_hist), KLL_TYPE, statSavepath + "pixel_" + std::to_string(i) + ".bin");
         }
     }
 }

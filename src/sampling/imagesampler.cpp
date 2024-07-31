@@ -4,6 +4,7 @@
  */
 #include "imagesampler.h"
 #include "imghelpers.h"
+#include "iniparser.h"
 
 ImageSampler::~ImageSampler() {
     delete saver;
@@ -23,10 +24,11 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
     try {
         // Read configuration settings
         IniParser parser;
-        samplingConfig = parser.parseIniFileNew(conf_path, "sampling", "");
-        filesSavePath = samplingConfig["filepath"][0];
-        createFolderIfNotExists(filesSavePath);
-	samplingConfig.erase("filepath");
+        samplingConfig = parser.parseIniFile(conf_path, "sampling", "");
+        statSavepath = samplingConfig["filepath"][0];
+        dataSavepath = samplingConfig["filepath"][1];
+        createFolderIfNotExists(statSavepath, dataSavepath);
+        samplingConfig.erase("filepath");
 
         // Register sampling statistics for saving based on configuration
         for (const auto& sampleMetric : samplingConfig) {
@@ -65,7 +67,7 @@ int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::
             updateSamplingStatistics(metric, confidence_score);
 
             if (confidence_score < thresh_lower || confidence_score > thresh_upper) {
-                saveImageWithTimestamp(img, filesSavePath, metric);
+                saveImageWithTimestamp(img, dataSavepath, metric);
             }
         } catch (const std::invalid_argument& e) {
             std::cerr << "Error: Invalid argument - " << e.what() << std::endl;
@@ -161,13 +163,13 @@ int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::
  */
 void ImageSampler::registerStatistics(const std::string& name) {
     if (name == "MARGINCONFIDENCE") {
-        saver->AddObjectToSave((void*)(&marginConfidenceBox), KLL_TYPE, filesSavePath + "marginconfidence.bin");
+        saver->AddObjectToSave((void*)(&marginConfidenceBox), KLL_TYPE, statSavepath + "marginconfidence.bin");
     } else if (name == "LEASTCONFIDENCE") {
-        saver->AddObjectToSave((void*)(&leastConfidenceBox), KLL_TYPE, filesSavePath + "leastconfidence.bin");
+        saver->AddObjectToSave((void*)(&leastConfidenceBox), KLL_TYPE, statSavepath + "leastconfidence.bin");
     } else if (name == "RATIOCONFIDENCE") {
-        saver->AddObjectToSave((void*)(&ratioConfidenceBox), KLL_TYPE, filesSavePath + "ratioconfidence.bin");
+        saver->AddObjectToSave((void*)(&ratioConfidenceBox), KLL_TYPE, statSavepath + "ratioconfidence.bin");
     } else if (name == "ENTROPYCONFIDENCE") {
-        saver->AddObjectToSave((void*)(&entropyConfidenceBox), KLL_TYPE, filesSavePath + "entropyconfidence.bin");
+        saver->AddObjectToSave((void*)(&entropyConfidenceBox), KLL_TYPE, statSavepath + "entropyconfidence.bin");
     }
 }
 

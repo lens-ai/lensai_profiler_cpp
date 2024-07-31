@@ -13,6 +13,7 @@ typedef struct {
     std::string filename;
 	int type;
 	void *obj;
+    uint32_t max_size;
 }data_object_t;
 
 typedef enum {

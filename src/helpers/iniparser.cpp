@@ -6,44 +6,15 @@
 #include <sstream>
 #include <iostream>
 
-std::map<std::string, std::string> IniParser::parseIniFile(const std::string& filename, const std::string& section, const std::string& key) {
+#include "datatracer_log.h"
+
+std::map<std::string, std::vector<std::string>> IniParser::parseIniFile(const std::string& filename, const std::string& section, const std::string& key) {
         boost::property_tree::ptree pt;
         try {
             // Read the INI file into the property tree
             boost::property_tree::ini_parser::read_ini(filename, pt);
         } catch (const std::exception& e) {
-            std::cerr << "Error reading INI file: " << e.what() << std::endl;
-            return {};
-        }
-
-        std::map<std::string, std::string> result;
-
-        // Fetch all key-value pairs from the specified section
-        try {
-            if (key.empty()) {
-                // Retrieve all keys if key is not specified
-                for (const auto& item : pt.get_child(section)) {
-                    result[item.first] = item.second.get_value<std::string>();
-                }
-            } else {
-                // Retrieve a specific key if provided
-                result[key] = pt.get<std::string>(section + "." + key);
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error fetching from section: " << section << ". Error: " << e.what() << std::endl;
-            result.clear();
-        }
-
-        return result;
-    }
-
-    std::map<std::string, std::vector<std::string>> IniParser::parseIniFileNew(const std::string& filename, const std::string& section, const std::string& key) {
-        boost::property_tree::ptree pt;
-        try {
-            // Read the INI file into the property tree
-            boost::property_tree::ini_parser::read_ini(filename, pt);
-        } catch (const std::exception& e) {
-            std::cerr << "Error reading INI file: " << e.what() << std::endl;
+            log_err << "Error reading INI file: " << e.what() << std::endl;
             return {};
         }
 
@@ -56,7 +27,7 @@ std::map<std::string, std::string> IniParser::parseIniFile(const std::string& fi
             std::string item;
             while (std::getline(ss, item, ',')) {
                 elems.push_back(item);
-		std::cout << item << std::endl;
+                log_debug << item << std::endl;
             }
             return elems;
         };
@@ -70,7 +41,7 @@ std::map<std::string, std::string> IniParser::parseIniFile(const std::string& fi
                     }
                 }
             } catch (const std::exception& e) {
-                std::cerr << "Error fetching global key-value pairs. Error: " << e.what() << std::endl;
+                log_err << "Error fetching global key-value pairs. Error: " << e.what() << std::endl;
                 result.clear();
             }
         } else {
@@ -86,7 +57,7 @@ std::map<std::string, std::string> IniParser::parseIniFile(const std::string& fi
                     result[key] = split(pt.get<std::string>(section + "." + key));
                 }
             } catch (const std::exception& e) {
-                std::cerr << "Error fetching from section: " << section << ". Error: " << e.what() << std::endl;
+                log_err << "Error fetching from section: " << section << ". Error: " << e.what() << std::endl;
                 result.clear();
             }
         }

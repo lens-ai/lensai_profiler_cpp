@@ -44,6 +44,12 @@ endif()
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+find_package(ZLIB REQUIRED)
+find_library(TAR_LIB tar REQUIRED)
+	
+if(NOT TAR_LIB)
+    message(FATAL_ERROR "libtar not found")
+endif()
 # Try to find OpenCV
 if(APPLE)
 set(OpenCV_DIR "/Users/venkatapydialli/Projects/Edgetpu/install/lib/cmake/opencv4")
@@ -61,30 +67,40 @@ INCLUDE_DIRECTORIES(/usr/local/libs/)
 # Include Directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/datasketches)
+include_directories(${ZLIB_INCLUDE_DIRS})
+
+set(TARGET_LIBS imagesampler imageprofiler modelprofiler lensaipublisher)
 
 add_library(imagesampler SHARED
+            src/helpers/generic.cpp
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
             src/helpers/imghelpers.cpp
-	    src/helpers/generic.cpp
             src/sampling/imagesampler.cpp
 			)
 
 add_library(imageprofiler SHARED
-			src/helpers/saver.cpp
-			src/helpers/iniparser.cpp
-                        src/helpers/imghelpers.cpp
-			src/helpers/generic.cpp
-			src/profiles/imageprofile.cpp
+            src/helpers/generic.cpp
+            src/helpers/saver.cpp
+            src/helpers/iniparser.cpp
+            src/helpers/imghelpers.cpp
+            src/profiles/imageprofile.cpp
 			)
 
 add_library(modelprofiler SHARED 
+            src/helpers/generic.cpp
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
-	    src/helpers/generic.cpp
             src/profiles/modelprofile.cpp
-            )	    
+            )
 
+add_library(lensaipublisher SHARED
+            src/helpers/iniparser.cpp
+            src/helpers/generic.cpp
+            src/helpers/tar_gz_creator.cpp
+            src/helpers/http_uploader.cpp
+            )
+	    
 if(APPLE)
 message(STATUS "skipping TEST for MAC")
 else()
@@ -94,10 +110,10 @@ add_executable(Tar_GZ_test
             )
 
 
-add_executable(Http_uploader_test
-	    src/helpers/http_uploader.cpp
-            src/helpers/tests/http_uploader_test.cpp	    
-	    )   
+#add_executable(Http_uploader_test
+#	    src/helpers/http_uploader.cpp
+#            src/helpers/tests/httpuploader_test.cpp	    
+#	    )   
 
 
 add_executable(ImageProcessingTest
@@ -111,43 +127,44 @@ add_executable(IniParserTest
               )
 
 add_executable(SaverTest
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/tests/saver_test.cpp
               )
 
 add_executable(image_profiler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
                 src/helpers/imghelpers.cpp
-		src/helpers/generic.cpp
                 src/profiles/imageprofile.cpp
                 src/profiles/tests/imageprofile_test.cpp
               )
+
 add_executable(model_profiler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
-		src/helpers/generic.cpp
                 src/profiles/modelprofile.cpp
                 src/profiles/tests/modelprofile_test.cpp
-	      )
+              )
 
 add_executable(image_sampler_test
+                src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
                 src/helpers/imghelpers.cpp
-		src/helpers/generic.cpp
                 src/sampling/imagesampler.cpp
                 src/sampling/tests/imagesampler_test.cpp
               )
 
 target_compile_definitions(ImageProcessingTest PRIVATE TEST)
-
 target_compile_definitions(IniParserTest PRIVATE TEST)
 target_compile_definitions(SaverTest PRIVATE TEST)
 target_compile_definitions(image_profiler_test PRIVATE TEST)
 target_compile_definitions(image_sampler_test PRIVATE TEST)
 target_compile_definitions(model_profiler_test PRIVATE TEST)
-target_compile_definitions(Http_uploader_test PRIVATE TEST)
+#target_compile_definitions(Http_uploader_test PRIVATE TEST)
 target_compile_definitions(Tar_GZ_test PRIVATE TEST)
 
 target_link_libraries(ImageProcessingTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
@@ -156,7 +173,7 @@ target_link_libraries(SaverTest gtest gtest_main ${OpenCV_LIBS} pthread)
 target_link_libraries(image_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 target_link_libraries(model_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
+#target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
 target_link_libraries(Tar_GZ_test gtest gtest_main tar z boost_filesystem boost_system pthread)
 
 enable_testing()
@@ -173,9 +190,10 @@ endif()
 target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library
-install(TARGETS ${CMAKE_PROJECT_NAME}
+install(TARGETS ${TARGET_LIBS}
         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include

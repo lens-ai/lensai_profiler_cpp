@@ -77,7 +77,9 @@ public:
    * @return Entropy-based confidence score
    */
     float entropy_confidence(std::vector<float>& prob_dist);
-    std::string filesSavePath;
+    std::string statSavepath;
+    std::string dataSavepath;
+
 private:   
     // Member variables for storing confidence metric statistics
     distributionBox marginConfidenceBox;

@@ -1,3 +1,9 @@
+/**
+
+@file http_uploader.cpp
+@brief Implementation of the HttpUploader class for uploading files via HTTP.
+*/
+
 #include <fstream>
 #include <vector>
 #include <ctime>
@@ -21,12 +27,26 @@ namespace fs = std::filesystem;
 #define uploader_debug if (0) std::cout
 #endif
 
+/**
+
+@brief Destructor for HttpUploader. Ensures upload process is stopped.
+*/
+
 HttpUploader::~HttpUploader() {
     {
         std::unique_lock<std::mutex> lock(upload_mutex_);
         StopUpload();
     } 
 }
+
+/**
+
+@brief Constructor for HttpUploader.
+
+@param conf_path Path to the configuration file.
+
+@param uploader_name Name of the uploader instance.
+*/
 
 HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uploader_name)
 :uploader_name_(uploader_name) {
@@ -62,10 +82,20 @@ HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uplo
     }
 }
 
+/**
+
+@brief Starts the upload process in a separate thread.
+*/
+
 void HttpUploader::StartUpload() {
     exitUploadLoop.store(false);
     upload_thread_ = std::thread(&HttpUploader::UploadLoop, this);
 }
+
+/**
+
+@brief The main loop for uploading files. This function runs in a separate thread.
+*/
 
 void HttpUploader::UploadLoop() {
     int index = 0;
@@ -97,12 +127,27 @@ void HttpUploader::UploadLoop() {
     }
 }
 
+/**
+
+@brief Stops the upload process by joining the upload thread.
+*/
+
+
 void HttpUploader::StopUpload(void) {
     if (upload_thread_.joinable()) {
         exitUploadLoop.store(true);
         upload_thread_.join();
     }
 }
+
+/**
+
+@brief Uploads a folder by first creating a tar.gz archive and then sending it via HTTP.
+
+@param index Index of the folder in the configuration.
+
+@return True if the upload was successful, false otherwise.
+*/
 
 bool HttpUploader::uploadFolder(int &index) {
     bool ret = false;
@@ -165,6 +210,21 @@ del_tar_gz:
 
     return ret;
 }
+
+/**
+
+@brief Sends the specified file via HTTP POST.
+
+@param filePath Path to the file to upload.
+
+@param sensorId Sensor ID to include in the upload metadata.
+
+@param timestamp Timestamp of the upload.
+
+@param fileType Type of the file being uploaded.
+
+@return True if the file was successfully uploaded, false otherwise.
+*/
 
 bool HttpUploader::postFile(const std::string& filePath, const std::string& sensorId, time_t timestamp, const std::string& fileType) {
     CURL* curl = curl_easy_init();

@@ -8,6 +8,17 @@
 #include <string>
 #include <atomic>
 
+// Filesystem includes
+#if __has_include(<filesystem>)
+    #include <filesystem>
+    namespace fs = std::filesystem;
+#elif __has_include(<boost/filesystem.hpp>)
+    #include <boost/filesystem.hpp>
+    namespace fs = boost::filesystem;
+#else
+    #error "No suitable filesystem library available"
+#endif
+
 //#include "MyObject.h" // Include your object header
 typedef struct {
     std::string filename;
@@ -19,6 +30,8 @@ typedef struct {
 typedef enum {
     KLL_TYPE,
     FI_TYPE,
+    JPEG_TYPE,
+    PNG_TYPE,
     TYPE_MAX
 }data_object_type_e;
 
@@ -58,4 +71,3 @@ private:
 };
 
 #endif // SAVER_H
-

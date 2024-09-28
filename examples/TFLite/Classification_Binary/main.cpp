@@ -173,8 +173,8 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     }
     
     // Extract embeddings from the penultimate layer
-    int penultimate_layer_index = interpreter->outputs()[1]; // Assuming the model is configured to output embeddings
-    TfLiteTensor* penultimate_tensor = interpreter->tensor(penultimate_layer_index);
+    int global_average_polling_index = 179;
+    TfLiteTensor* penultimate_tensor = interpreter->tensor(global_average_polling_index);
     std::vector<float> embeddings(penultimate_tensor->data.f, penultimate_tensor->data.f + penultimate_tensor->bytes / sizeof(float));
 
     std::cout << "profiling image profile" <<std::endl;

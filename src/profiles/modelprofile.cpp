@@ -59,6 +59,7 @@ int ModelProfile::getNumDistributionBoxes() const {
 void ModelProfile::registerStatistics(){
    saver->AddObjectToSave((void*)(model_embeddings), KLL_TYPE, statSavepath + "embeddings.bin");
 }
+
 /**
  * @brief Logs classification model statistics
  * @param inference_latency Time taken for model inference

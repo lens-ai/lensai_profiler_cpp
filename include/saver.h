@@ -7,6 +7,7 @@
 #include <queue>
 #include <string>
 #include <atomic>
+#include <opencv2/opencv.hpp> 
 
 // Filesystem includes
 #if __has_include(<filesystem>)

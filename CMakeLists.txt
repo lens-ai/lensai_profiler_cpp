@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(imagesampler)
+project(lensai)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -69,7 +69,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/datasketches)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-set(TARGET_LIBS imagesampler imageprofiler modelprofiler lensaipublisher)
+set(TARGET_LIBS imagesampler imageprofiler modelprofiler customprofiler lensaipublisher)
 
 add_library(imagesampler SHARED
             src/helpers/generic.cpp
@@ -93,6 +93,13 @@ add_library(modelprofiler SHARED
             src/helpers/iniparser.cpp
             src/profiles/modelprofile.cpp
             )
+
+add_library(customprofiler SHARED
+	    src/helpers/generic.cpp
+	    src/helpers/saver.cpp
+	    src/helpers/iniparser.cpp
+	    src/profiles/customprofile.cpp
+           )
 
 add_library(lensaipublisher SHARED
             src/helpers/iniparser.cpp
@@ -190,6 +197,7 @@ endif()
 target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(customprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library

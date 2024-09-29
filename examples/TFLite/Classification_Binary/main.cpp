@@ -12,6 +12,7 @@
 #include <imagesampler.h>
 #include <imageprofile.h>
 #include <modelprofile.h>
+#include <customprofile.h>
 #include <http_uploader.h>
 #include <chrono>
 
@@ -52,7 +53,7 @@ void printTensorInfo(tflite::Interpreter* interpreter, int tensor_index) {
 
 #ifdef APPLE
 void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* interpreter, const std::vector<std::string>& labels, const std::string& model_name, ImageProfile &image_profile, 
-	       ModelProfile &model_profile, ImageSampler &image_sampler) {
+	       ModelProfile &model_profile, ImageSampler &image_sampler, CustomProfile &custom_profile) {
     // Get Input Tensor Dimensions
     int input = interpreter->inputs()[0];
     auto height = interpreter->tensor(input)->dims->data[1];
@@ -198,7 +199,18 @@ void run_inference_on_image(const std::string& imageFile, tflite::Interpreter* i
     end = std::chrono::steady_clock::now();
     auto execution_time_sampler = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Execution time for image sampler: " << execution_time_sampler << std::endl;
+    
+    std::cout << "Custom Profiling" << std::endl;
+    start = std::chrono::steady_clock::now();
+    custom_profile.profile("CPUUSAGE", 10);
+    custom_profile.profile("MEMORYUSAGE", 30);
+    end = std::chrono::steady_clock::now();
+    auto execution_time_customprofiler = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "Execution time for image sampler: " << execution_time_customprofiler << std::endl;
+
     std::cout << "Execution time inference :" << inference_time << std::endl;
+
+
     // Display image
     //cv::imshow("Output", frame);
     //cv::waitKey(0);
@@ -253,6 +265,7 @@ int main(int argc, char** argv) {
     ImageProfile image_profile(configFile, saveIntervalSec, channels);
     ModelProfile model_profile(modelName, configFile, saveIntervalSec, channels);
     ImageSampler image_sampler(configFile, saveIntervalSec);
+    CustomProfile custom_profile(configFile, saveIntervalSec);
 
     HttpUploader data_uploader(configFile, "data_uploader");
     data_uploader.StartUpload();
@@ -266,7 +279,7 @@ int main(int argc, char** argv) {
         if (entry.is_regular_file() && (entry.path().extension() == ".JPEG" || entry.path().extension() == ".png")) {
             std::cout << "Processing image: " << entry.path().string() << std::endl;
             run_inference_on_image(entry.path().string(), interpreter.get(), labels, modelFileName,
-			    image_profile, model_profile, image_sampler);
+			    image_profile, model_profile, image_sampler, custom_profile);
         }
     }
 #endif

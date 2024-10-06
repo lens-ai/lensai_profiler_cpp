@@ -36,7 +36,6 @@ ImageProfile::ImageProfile(const std::string& conf_path, int save_interval, int 
         imageConfig = parser.parseIniFile(conf_path, "image", "");
 	statSavepath = imageConfig["filepath"][0];
 	dataSavepath = 	imageConfig["filepath"][1];
-	std::cout << statSavepath << dataSavepath << std::endl;
         createFolderIfNotExists(statSavepath, dataSavepath);
         imageConfig.erase("filepath");
 

@@ -60,7 +60,7 @@ HttpUploader::HttpUploader(const std::string& conf_path, const std::string& uplo
         http_uploader_data_.sensorId = lensaipublisherConfig["sensorId"][0];
         uploader_info << lensaipublisherConfig["folderPath"].size() << std::endl;
 
-        for (int i=0; i < lensaipublisherConfig["folderPath"].size(); i++) {
+        for (auto i=0; i < lensaipublisherConfig["folderPath"].size(); i++) {
             uploader_info << "[" << i << "]" << std::endl;
             uploader_info << "\tfolderPath" << "=" << lensaipublisherConfig["folderPath"][i] << std::endl;
             http_uploader_data_.folderPath.push_back(lensaipublisherConfig["folderPath"][i]);

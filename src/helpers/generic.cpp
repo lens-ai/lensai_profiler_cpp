@@ -66,3 +66,16 @@ bool createFolderIfNotExists(const std::string& statSavepath, const std::string&
     }
     return true;
 }
+
+bool createFolder(const std::string& Savepath) {
+    try {
+        if (!std::filesystem::exists(Savepath)) {
+            std::filesystem::create_directories(Savepath);
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error creating Savepath: " << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}
+

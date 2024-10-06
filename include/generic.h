@@ -21,6 +21,7 @@ namespace fs = std::filesystem;  // Namespace alias for readability
  */
 bool createFolderIfNotExists(const std::string& statSavepath, const std::string& dataSavepath);
 
+bool createFolder(const std::string& Savepath);
 int acquire_lock(const std::string& file_path);
 int release_lock(int fd);
 

@@ -8,10 +8,6 @@
 #include "customprofile.h"
 #include <iniparser.h>
 
-CustomProfile::~CustomProfile() {
-    delete saver;
-}
-
 
 /**
  * @class CustomProfile
@@ -28,7 +24,6 @@ CustomProfile::CustomProfile(const std::string& conf_path, int save_interval)
 	customConfig = parser.parseIniFile(conf_path, "custom", "");
 	statSavepath = customConfig["filepath"][0];
 	dataSavepath = 	customConfig["filepath"][1];
-	std::cout << statSavepath << dataSavepath << std::endl;
         createFolderIfNotExists(statSavepath, dataSavepath);
         customConfig.erase("filepath");
 
@@ -36,6 +31,20 @@ CustomProfile::CustomProfile(const std::string& conf_path, int save_interval)
     } catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
     }
+}
+
+
+/**
+ * @class CustomProfile
+ * @brief Class to manage the resources and freeing memory
+**/
+CustomProfile::~CustomProfile() {
+    delete saver;
+    // Clean up all the distributionBox objects
+    for (auto& entry : custom_stat_) {
+        delete entry.second;
+    }
+    custom_stat_.clear(); // Clear the map after deleting the objects
 }
 
 

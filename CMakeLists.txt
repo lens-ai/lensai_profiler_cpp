@@ -101,6 +101,13 @@ add_library(customprofiler SHARED
 	    src/profiles/customprofile.cpp
            )
 
+add_library(trackerprofiler SHARED
+            src/helpers/generic.cpp
+	    src/helpers/saver.cpp
+	    src/helpers/iniparser.cpp
+	    src/profiles/trackerprofile.cpp
+)	   
+
 add_library(lensaipublisher SHARED
             src/helpers/iniparser.cpp
             src/helpers/generic.cpp
@@ -198,6 +205,7 @@ target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(customprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(trackerprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library

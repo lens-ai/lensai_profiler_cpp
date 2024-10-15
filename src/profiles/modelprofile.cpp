@@ -94,8 +94,48 @@ int ModelProfile::log_classification_model_stats(float inference_latency __attri
 /**
  * @brief Logs embeddings 
  */
-void ModelProfile::log_embeddings(const std::vector<float>& embeddings) {
+int ModelProfile::log_embeddings(const std::vector<float>& embeddings) {
     for (const auto& value : embeddings) {
         model_embeddings->update(value);
     }
+    return 1;
+}
+
+/**
+ * @brief Computes and logs selected image statistics
+ * @param img OpenCV image matrix
+ * @param save_sample Flag indicating whether to save samples exceeding thresholds
+ * @return 1 on success, error code on failure
+ */
+int ModelProfile::log_embeddings(const std::vector<float>& embeddings, int cls) {
+    // Get the distributionBox for the given statistic name
+    distributionBox* cls_dBox = getBox(cls);    
+
+    // Update the distributionBox with the given value
+    for (const auto& value : embeddings) {
+        cls_dBox->update(value);
+    }
+    return 1; // Indicate success
+}
+
+
+/**
+ * @brief Gets the distributionBox (KLL sketch) for the given statistic name.
+ * If it doesn't exist, a new one is created and added to the map.
+ * @param name Statistic name
+ * @return Pointer to the distributionBox object
+ */
+distributionBox* ModelProfile::getBox(const int cls) {
+
+    // Check if the distributionBox exists in the map
+    if (embeddings_stat_.find(cls) == embeddings_stat_.end()) {
+        // If not, create a new distributionBox and add it to the map
+        embeddings_stat_[cls] = new distributionBox();
+        
+        // Also register the new box for saving
+        saver->AddObjectToSave((void*)(embeddings_stat_[cls]), KLL_TYPE, statSavepath + std::to_string(cls) + "_embedding.bin");
+    }
+
+    // Return the distributionBox
+    return embeddings_stat_[cls];
 }

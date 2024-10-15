@@ -58,7 +58,7 @@ int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::
 
     // Apply configured sampling criteria to identify uncertain samples
     for (const auto& sampleMetric : samplingConfig) {
-        try {
+          try {
             float thresh_lower = std::stof(sampleMetric.second[0]);
             float thresh_upper = std::stof(sampleMetric.second[1]);
 	    std::string metric = sampleMetric.first;
@@ -145,8 +145,8 @@ int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::
    */
 
    float ImageSampler::entropy_confidence(std::vector<float>& prob_dist) {
-    float raw_entropy = 0.0;
-    size_t num_labels = prob_dist.size();
+   float raw_entropy = 0.0;
+   size_t num_labels = prob_dist.size();
 
     for (size_t i = 0; i < num_labels; i++) {
         if (prob_dist[i] > 0.0) {
@@ -157,11 +157,11 @@ int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::
     return normalized_entropy;
     }
 
-/**
- * @brief Registers sampling statistics for saving based on configuration
- * @param name Sampling confidence name
- */
-void ImageSampler::registerStatistics(const std::string& name) {
+  /**
+   * @brief Registers sampling statistics for saving based on configuration
+   * @param name Sampling confidence name
+   */
+   void ImageSampler::registerStatistics(const std::string& name) {
     if (name == "MARGINCONFIDENCE") {
         saver->AddObjectToSave((void*)(&marginConfidenceBox), KLL_TYPE, statSavepath + "marginconfidence.bin");
     } else if (name == "LEASTCONFIDENCE") {

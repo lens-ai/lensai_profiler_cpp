@@ -57,6 +57,7 @@ else()
 set(OpenCV_DIR "/usr")
 endif()
 
+find_package (Eigen3 REQUIRED NO_MODULE)
 find_package(OpenCV REQUIRED)
 
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -69,7 +70,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/datasketches)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-set(TARGET_LIBS imagesampler imageprofiler modelprofiler customprofiler lensaipublisher)
+set(TARGET_LIBS imagesampler imageprofiler modelprofiler customprofiler lensaipublisher trackingprofiler)
 
 add_library(imagesampler SHARED
             src/helpers/generic.cpp
@@ -101,11 +102,12 @@ add_library(customprofiler SHARED
 	    src/profiles/customprofile.cpp
            )
 
-add_library(trackerprofiler SHARED
+add_library(trackingprofiler SHARED
             src/helpers/generic.cpp
 	    src/helpers/saver.cpp
 	    src/helpers/iniparser.cpp
-	    src/profiles/trackerprofile.cpp
+	    src/profiles/trackingprofile.cpp
+	    src/helpers/trackingmetrics.cpp
 )	   
 
 add_library(lensaipublisher SHARED
@@ -146,7 +148,7 @@ add_executable(SaverTest
                 src/helpers/tests/saver_test.cpp
               )
 
-add_executable(image_profiler_test
+add_executable(ImageProfilerTest
                 src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
@@ -155,7 +157,7 @@ add_executable(image_profiler_test
                 src/profiles/tests/imageprofile_test.cpp
               )
 
-add_executable(model_profiler_test
+add_executable(ModelProfilerTest
                 src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
@@ -163,7 +165,7 @@ add_executable(model_profiler_test
                 src/profiles/tests/modelprofile_test.cpp
               )
 
-add_executable(image_sampler_test
+add_executable(ImageSamplerTest
                 src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
@@ -172,32 +174,41 @@ add_executable(image_sampler_test
                 src/sampling/tests/imagesampler_test.cpp
               )
 
+add_executable(TrackingMetricsTest
+	        src/helpers/trackingmetrics.cpp
+		src/helpers/tests/trackingmetrics_test.cpp
+	      )
+	       
+
 target_compile_definitions(ImageProcessingTest PRIVATE TEST)
 target_compile_definitions(IniParserTest PRIVATE TEST)
 target_compile_definitions(SaverTest PRIVATE TEST)
-target_compile_definitions(image_profiler_test PRIVATE TEST)
-target_compile_definitions(image_sampler_test PRIVATE TEST)
-target_compile_definitions(model_profiler_test PRIVATE TEST)
+target_compile_definitions(ImageProfilerTest PRIVATE TEST)
+target_compile_definitions(ImageSamplerTest PRIVATE TEST)
+target_compile_definitions(ModelProfilerTest PRIVATE TEST)
 #target_compile_definitions(Http_uploader_test PRIVATE TEST)
 target_compile_definitions(Tar_GZ_test PRIVATE TEST)
+target_compile_definitions(TrackingMetricsTest PRIVATE TEST)
 
 target_link_libraries(ImageProcessingTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
 target_link_libraries(IniParserTest gtest gtest_main ${OpenCV_LIBS} pthread curl)
 target_link_libraries(SaverTest gtest gtest_main ${OpenCV_LIBS} pthread)
-target_link_libraries(image_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-target_link_libraries(image_sampler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
-target_link_libraries(model_profiler_test gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
+target_link_libraries(ImageProfilerTest gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
+target_link_libraries(ImageSamplerTest gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
+target_link_libraries(ModelProfilerTest gtest gtest_main ${OpenCV_LIBS} ${AWSSDK_LINK_LIBRARIES} curl pthread)
 #target_link_libraries(Http_uploader_test gtest gtest_main ${OpenCV_LIBS} ${CURL_LIBRARIES} curl pthread)
 target_link_libraries(Tar_GZ_test gtest gtest_main tar z boost_filesystem boost_system pthread)
+target_link_libraries(TrackingMetricsTest gtest gtest_main ${OpenCV_LIBS} pthread curl Eigen3::Eigen) 
 
 enable_testing()
 #Test
 add_test(NAME ImageProcessingTest COMMAND ImageProcessingTest)
 add_test(NAME IniParserTest COMMAND IniParserTest)
 add_test(NAME SaverTest COMMAND SaverTest)
-add_test(NAME image_profiler_test COMMAND image_profiler_test)
-add_test(NAME image_sampler_test COMMAND image_sampler_test)
-add_test(NAME model_profiler_test COMMAND model_profiler_test)
+add_test(NAME ImageProfilerTest COMMAND ImageProfilerTest)
+add_test(NAME ImageSamplerTest COMMAND ImageSamplerTest)
+add_test(NAME ModelSamplerTest COMMAND ModelSamplerTest)
+add_test(NAME TrackingMetricsTest COMMAND TrackingMetricsTest)
 #add_test(NAME  COMMAND )
 endif()
 
@@ -205,7 +216,7 @@ target_link_libraries(imagesampler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(imageprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(customprofiler ${OpenCV_LIBS} pthread curl)
-target_link_libraries(trackerprofiler ${OpenCV_LIBS} pthread curl)
+target_link_libraries(trackingprofiler ${OpenCV_LIBS} pthread curl Eigen3::Eigen)
 target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
 
 # Install the library

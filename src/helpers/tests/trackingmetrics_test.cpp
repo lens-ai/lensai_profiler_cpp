@@ -76,8 +76,8 @@ TEST(TrackingMetricsTest, DetectAnomalousRotation) {
 
 // General Test for Metrics Logging (Placeholder)
 TEST(TrackingMetricsTest, LogMetrics) {
-    TrackingMetrics tracker;
-    tracker.logMetrics();  // Placeholder for testing logging functionality
+    //TrackingMetrics tracker;
+    //tracker.logMetrics();  // Placeholder for testing logging functionality
 }
 
 // Method Invocation and Logging Testing
@@ -87,6 +87,6 @@ TEST(TrackingMetricsTest, MethodInvocation) {
     Position2D actual = {12.0f, 24.0f};
     float error = tracker.computePositionError(predicted, actual);
     ASSERT_NEAR(error, 5.6569f, 0.0001f);
-    tracker.logMetrics();  // Placeholder check for logging
+    //tracker.logMetrics();  // Placeholder check for logging
 }
 

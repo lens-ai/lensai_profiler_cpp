@@ -10,7 +10,7 @@ class ImageSamplerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         createSampleIniFile("test_config.ini");  // Create a sample configuration file
-        sampler = new ImageSampler("test_config.ini", 1);  // Initialize ImageSampler
+        sampler = new ImageSampler("test_config.ini", 1, "MobileNet");  // Initialize ImageSampler
     }
 
     void TearDown() override {

@@ -7,5 +7,8 @@ std::unique_ptr<ModelOutputParser> ParserFactory::createParser(const std::string
     } else if (model_type == "ResNet") {
         return std::make_unique<ResNetParser>();
     }
+    else if (model_type == "MobileNet") {
+        return std::make_unique<ResNetParser>();
+    }
     throw std::invalid_argument("Unsupported model type: " + model_type);
 }

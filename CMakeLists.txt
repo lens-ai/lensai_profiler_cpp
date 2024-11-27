@@ -166,7 +166,6 @@ add_executable(ModelProfilerTest
                 src/helpers/iniparser.cpp
 		src/helpers/resnet_parser.cpp
 		src/helpers/yolo_parser.cpp
-		src/helpers/modeloutput_parser.cpp
 		src/helpers/parser_factory.cpp
                 src/profiles/modelprofile.cpp
                 src/profiles/tests/modelprofile_test.cpp
@@ -179,7 +178,6 @@ add_executable(ImageSamplerTest
                 src/helpers/imghelpers.cpp
                 src/helpers/resnet_parser.cpp
 		src/helpers/yolo_parser.cpp
-		src/helpers/modeloutput_parser.cpp
 		src/helpers/parser_factory.cpp
                 src/sampling/imagesampler.cpp
                 src/sampling/tests/imagesampler_test.cpp

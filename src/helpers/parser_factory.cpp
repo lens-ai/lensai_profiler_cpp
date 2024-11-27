@@ -1,8 +1,6 @@
 #include "parser_factory.h"
-#include "yolo_parser.h"
-#include "resnet_parser.h"
-#include <stdexcept>
 
+// Implementation of the createParser method
 std::unique_ptr<ModelOutputParser> ParserFactory::createParser(const std::string& model_type) {
     if (model_type == "YOLO") {
         return std::make_unique<YOLOParser>();

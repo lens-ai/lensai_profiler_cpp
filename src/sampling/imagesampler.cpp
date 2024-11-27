@@ -6,6 +6,8 @@
 #include "imghelpers.h"
 #include "iniparser.h"
 #include "parser_factory.h"
+#include "yolo_parser.h"
+#include "resnet_parser.h"
 
 ImageSampler::~ImageSampler() {
     delete saver;
@@ -54,8 +56,8 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval, std:
 
 int ImageSampler::sample(const void* raw_output, cv::Mat& img, bool save_sample) {
     std::vector<float> confidence; // Extract confidence scores
-    auto parser = ParserFactory::createParser("YOLO");
-    auto results = parser->parse(&raw_output);
+    auto parser = ParserFactory::createParser(model_type);
+    auto results = parser->processOutput(&raw_output);
     for (const auto& pair : results) {
         confidence.push_back(pair.first);
     }

@@ -1,19 +1,15 @@
 #ifndef PARSER_FACTORY_H
 #define PARSER_FACTORY_H
 
+#include "modeloutput_parser.h"
+#include "yolo_parser.h"
+#include "resnet_parser.h"
 #include <memory>
-#include <string>
-#include "modeloutput_parser.h" // Base interface for parsers
+#include <stdexcept>
 
 class ParserFactory {
 public:
-    /**
-     * @brief Creates a parser object based on the model type.
-     * 
-     * @param model_type A string specifying the model type (e.g., "YOLO", "ResNet").
-     * @return A unique pointer to the created parser object.
-     * @throws std::invalid_argument if the model type is unsupported.
-     */
+    // Factory method to create the appropriate parser based on model type
     static std::unique_ptr<ModelOutputParser> createParser(const std::string& model_type);
 };
 

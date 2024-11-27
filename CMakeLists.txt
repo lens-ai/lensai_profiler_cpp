@@ -76,8 +76,6 @@ add_library(imagesampler SHARED
             src/helpers/generic.cpp
             src/helpers/saver.cpp
             src/helpers/iniparser.cpp
-            src/helpers/resnet_parser.cpp
-	    src/helpers/yolo_parser.cpp
 	    src/helpers/parser_factory.cpp
             src/helpers/imghelpers.cpp
             src/sampling/imagesampler.cpp
@@ -164,8 +162,6 @@ add_executable(ModelProfilerTest
                 src/helpers/generic.cpp
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
-		src/helpers/resnet_parser.cpp
-		src/helpers/yolo_parser.cpp
 		src/helpers/parser_factory.cpp
                 src/profiles/modelprofile.cpp
                 src/profiles/tests/modelprofile_test.cpp
@@ -176,8 +172,6 @@ add_executable(ImageSamplerTest
                 src/helpers/saver.cpp
                 src/helpers/iniparser.cpp
                 src/helpers/imghelpers.cpp
-                src/helpers/resnet_parser.cpp
-		src/helpers/yolo_parser.cpp
 		src/helpers/parser_factory.cpp
                 src/sampling/imagesampler.cpp
                 src/sampling/tests/imagesampler_test.cpp

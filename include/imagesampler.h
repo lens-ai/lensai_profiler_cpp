@@ -36,7 +36,7 @@ public:
    * @brief Constructor to initialize ImageSampler object with configuration file path
    * @param configFilePath Path to the configuration file
    */
-  ImageSampler(const std::string& conf_path, int save_interval);
+  ImageSampler(const std::string& conf_path, int save_interval, std::string& model_type);
   ~ImageSampler();
 
   /**
@@ -45,7 +45,7 @@ public:
    * @param image OpenCV image matrix
    * @param saveSample Flag indicating whether to save sampled images
    */
-   int sample(const std::vector<std::pair<float, int>> &results, cv::Mat &img, bool save_sample);
+   int sample(const void *raw_output, cv::Mat &img, bool save_sample);
   
    /**
    * @brief Calculates margin confidence (difference between top two probabilities)
@@ -86,6 +86,7 @@ private:
     distributionBox leastConfidenceBox;
     distributionBox ratioConfidenceBox;
     distributionBox entropyConfidenceBox;
+    std::string model_type;
     Saver *saver;
     //ImageUploader *uploader;
     std::map<std::string, std::vector<std::string>> samplingConfig;

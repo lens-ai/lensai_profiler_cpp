@@ -84,6 +84,6 @@ TEST_F(ImageSamplerTest, SampleMethod) {
     };
 
     cv::Mat img = cv::Mat::ones(100, 100, CV_8UC1) * 128;  // Simple grayscale image
-    int result = sampler->sample(classificationResults, img, true);  // Sample with save_sample = true
+    int result = sampler->sample(static_cast<const void*>(&classificationResults), img, true);  // Sample with save_sample = true
     EXPECT_EQ(result, 1);  // Expected success
 }

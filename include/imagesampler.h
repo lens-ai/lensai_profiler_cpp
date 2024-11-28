@@ -36,7 +36,7 @@ public:
    * @brief Constructor to initialize ImageSampler object with configuration file path
    * @param configFilePath Path to the configuration file
    */
-  ImageSampler(const std::string& conf_path, int save_interval, std::string& model_type);
+  ImageSampler(const std::string& conf_path, int save_interval, const std::string& model_type);
   ~ImageSampler();
 
   /**

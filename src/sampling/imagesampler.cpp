@@ -22,7 +22,7 @@ ImageSampler::~ImageSampler() {
    * @param conf_path Path to configuration file
    * @param saver Saver object for saving sampling statistics
    */
-ImageSampler::ImageSampler(const std::string& conf_path, int save_interval, std::string& model_type)
+ImageSampler::ImageSampler(const std::string& conf_path, int save_interval, const std::string& model_type)
     : saver(new Saver(save_interval, "ImageSampler")) {
     try {
         // Read configuration settings

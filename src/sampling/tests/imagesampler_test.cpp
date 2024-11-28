@@ -10,7 +10,7 @@ class ImageSamplerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         createSampleIniFile("test_config.ini");  // Create a sample configuration file
-        sampler = new ImageSampler("test_config.ini", 1);  // Initialize ImageSampler
+        sampler = new ImageSampler("test_config.ini", 1, "MobileNet");  // Initialize ImageSampler
     }
 
     void TearDown() override {
@@ -84,6 +84,6 @@ TEST_F(ImageSamplerTest, SampleMethod) {
     };
 
     cv::Mat img = cv::Mat::ones(100, 100, CV_8UC1) * 128;  // Simple grayscale image
-    int result = sampler->sample(classificationResults, img, true);  // Sample with save_sample = true
+    int result = sampler->sample(static_cast<const void*>(&classificationResults), img, true);  // Sample with save_sample = true
     EXPECT_EQ(result, 1);  // Expected success
 }

@@ -5,6 +5,9 @@
 #include "imagesampler.h"
 #include "imghelpers.h"
 #include "iniparser.h"
+#include "parser_factory.h"
+#include "yolo_parser.h"
+#include "resnet_parser.h"
 
 ImageSampler::~ImageSampler() {
     delete saver;
@@ -19,7 +22,7 @@ ImageSampler::~ImageSampler() {
    * @param conf_path Path to configuration file
    * @param saver Saver object for saving sampling statistics
    */
-ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
+ImageSampler::ImageSampler(const std::string& conf_path, int save_interval, const std::string& model_type)
     : saver(new Saver(save_interval, "ImageSampler")) {
     try {
         // Read configuration settings
@@ -29,6 +32,7 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
         dataSavepath = samplingConfig["filepath"][1];
         createFolderIfNotExists(statSavepath, dataSavepath);
         samplingConfig.erase("filepath");
+	this->model_type = model_type;
 
         // Register sampling statistics for saving based on configuration
         for (const auto& sampleMetric : samplingConfig) {
@@ -50,8 +54,10 @@ ImageSampler::ImageSampler(const std::string& conf_path, int save_interval)
    * @return 1 on success, error code on failure
    */
 
-int ImageSampler::sample(const std::vector<std::pair<float, int>>& results, cv::Mat& img, bool save_sample) {
+int ImageSampler::sample(const void* raw_output, cv::Mat& img, bool save_sample) {
     std::vector<float> confidence; // Extract confidence scores
+    auto parser = ParserFactory::createParser(model_type);
+    auto results = parser->processOutput(&raw_output);
     for (const auto& pair : results) {
         confidence.push_back(pair.first);
     }

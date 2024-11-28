@@ -1,5 +1,6 @@
 #include "modelprofile.h"
 #include "iniparser.h"
+#include "parser_factory.h"
 
 ModelProfile::~ModelProfile() {
     delete saver;

@@ -109,7 +109,14 @@ add_library(trackingprofiler SHARED
 	    src/helpers/iniparser.cpp
 	    src/profiles/trackingprofile.cpp
 	    src/helpers/trackingmetrics.cpp
-)	   
+)	  
+
+add_library(modelscanner SHARED
+            src/helpers/generic.cpp
+	    src/helpers/saver.cpp
+	    src/helpers/iniparser.cpp
+            src/profiles/modelscanner.cpp
+)
 
 add_library(lensaipublisher SHARED
             src/helpers/iniparser.cpp
@@ -221,6 +228,7 @@ target_link_libraries(modelprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(customprofiler ${OpenCV_LIBS} pthread curl)
 target_link_libraries(trackingprofiler ${OpenCV_LIBS} pthread curl Eigen3::Eigen)
 target_link_libraries(lensaipublisher ${OpenCV_LIBS} pthread curl ${ZLIB_LIBRARIES} ${TAR_LIB})
+target_link_libraries(modelscanner pthread curl) 
 
 # Install the library
 install(TARGETS ${TARGET_LIBS}
